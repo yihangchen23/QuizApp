@@ -5,8 +5,8 @@ import 'package:crypto/crypto.dart';
 import 'dart:typed_data';
 
 // Initialize Supabase
-const String supabaseUrl = 'https://your-supabase-url.supabase.co';
-const String supabaseKey = 'your-api-key';
+const String supabaseUrl = 'https://kacvtverzchkkfrolwik.supabase.co/';
+const String supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthY3Z0dmVyemNoa2tmcm9sd2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNjQ3NDgsImV4cCI6MjA2MjY0MDc0OH0.yFUaKLAyREtx9O_qey3_H6-8v5bk1bxZ4SOf6kSx0Js';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
