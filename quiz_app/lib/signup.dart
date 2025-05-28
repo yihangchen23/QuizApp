@@ -44,7 +44,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       curve: Curves.easeOut,
                       width: 120.0,
                       height: 120.0,
-                      child: Image.asset('assets/logo.png'), // Replace with your logo
+                      child: Image.asset('../assets/logo.jpg'), // Replace with your logo
                     ),
                     SizedBox(height: 40.0),
 

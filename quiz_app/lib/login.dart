@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:quiz_app/signup.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quiz_app/teacher_dashboard.dart';
+import 'package:quiz_app/student_dashboard.dart';
 import 'package:crypto/crypto.dart'; // for SHA256 hashing
 import 'dart:convert'; // for utf8.encode
 
@@ -242,6 +243,12 @@ class _LoginScreenState extends State<LoginScreen> {
         if (storedHash == enteredPasswordHash) {
           // Password matches, navigate to student dashboard
           //Navigator.pushReplacementNamed(context, '/student_dashboard');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StudentDashboardScreen(studentId: student['id'], studentName: student['full_name'],), // Pass the student ID
+            ),
+          );
           print('navigate to student dashboard');
         } else {
           setState(() {

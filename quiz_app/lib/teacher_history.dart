@@ -212,7 +212,7 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
           ),
         ),
       ),
-    );
+    ); //TO-DO filter by quizzes with flagged answers
   }
 
   Widget _buildClassPerformanceChart() {
@@ -449,6 +449,9 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
                               ),
                             ),
                             Text('Feedback: ${answer['ai_feedback']}'),
+                            Text(//temporary flagging indicator, probably replace with a warning icon or similar (idk why it just says null, no clue what im missing)
+                              'Flagged: ${answer['flagged_for_review']}'
+                            ),
                           ],
                         ),
                         trailing: IconButton(

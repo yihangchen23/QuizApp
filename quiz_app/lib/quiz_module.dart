@@ -94,6 +94,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
       final aiResult = await _gradeWithAI(
         question: q['question_text'],
         expected: q['expected_answer'],
+        points: q['points'],
         studentResponse: studentResponse,
       );
 
@@ -107,6 +108,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
           'student_response': studentResponse,
           'ai_score': aiResult['score'],
           'ai_feedback': aiResult['feedback'],
+          'flagged_for_review': aiResult['flagged'],
           'answered_at': DateTime.now().toIso8601String(),
         }
       ]);
@@ -122,6 +124,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
   Future<Map<String, dynamic>> _gradeWithAI({
     required String question,
     required String expected,
+    required String points,
     required String studentResponse,
   }) async {
     final url = Uri.parse('https://openrouter.ai/api/v1/chat/completions');
@@ -132,7 +135,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
       'X-Title': '<YOUR_SITE_NAME>',
     };
     final prompt =
-        'Please format your answer in one line in the format of ["your feedback for the student answer","your rating of the students answer between 0(Wrong Answer)-10(Right Answer with proper explanation"].... Question is "$question"... Expected Answer is "$expected"... Student Response is "$studentResponse"';
+        'Please format your answer in one line in the format of ["your feedback for the student answer","your rating of the students answer between 0(Wrong Answer)-$points(Right Answer with proper explanation"].... Question is "$question"... Expected Answer is "$expected"... Student Response is "$studentResponse"';
 
     try {
       final body = jsonEncode({
@@ -153,14 +156,15 @@ class _QuizModulePageState extends State<QuizModulePage> {
           return {
             'feedback': match.group(1) ?? '',
             'score': double.tryParse(match.group(2) ?? '0') ?? 0,
+            'flagged': false,
           };
         }
         return {'feedback': content, 'score': 0};
       } else {
-        return {'feedback': 'AI grading failed.', 'score': 0};
+        return {'feedback': 'AI grading failed.', 'score': 0, 'flagged': true};
       }
     } catch (e) {
-      return {'feedback': 'AI error: $e', 'score': 0};
+      return {'feedback': 'AI error: $e', 'score': 0, 'flagged': true};
     }
   }
 
