@@ -6,11 +6,13 @@ class StudentClassPage extends StatefulWidget {
   final String studentId;
   final String studentName;
   final String classId;
+  final String className;
 
   const StudentClassPage({
     required this.studentId,
     required this.studentName,
     required this.classId,
+    required this.className,
     Key? key,
   }) : super(key: key);
 
@@ -288,52 +290,10 @@ Widget _buildQuizList() {
     );
   }
 
-  Widget _buildStudentHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Colors.blue.shade700,
-            child: Text(
-              widget.studentName.substring(0, 1).toUpperCase(),
-              style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
-          SizedBox(width: 18),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.studentName,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  color: Colors.blue.shade900,
-                ),
-              ),
-              Text(
-                'Student Dashboard',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.blueGrey.shade700,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Quizzes'),
         backgroundColor: Colors.blue.shade700,
         actions: [
           IconButton(
@@ -360,24 +320,8 @@ Widget _buildQuizList() {
                   child: SingleChildScrollView(
                     physics: AlwaysScrollableScrollPhysics(),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        // Student Header
-                        Container(
-                          constraints: BoxConstraints(maxWidth: 600),
-                          child: Card(
-                            elevation: 8,
-                            margin: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            color: Colors.blue[50],
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: _buildStudentHeader(),
-                            ),
-                          ),
-                        ),
                         // Filter/Search Bar
                         Container(
                           constraints: BoxConstraints(maxWidth: 600),
@@ -390,7 +334,23 @@ Widget _buildQuizList() {
                             color: Colors.blue[50],
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                              child: _buildFilterBar(),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Text(
+                                      widget.className,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 24,
+                                        color: Colors.blue.shade900,
+                                      ),
+                                    ),
+                                  ),
+                                  _buildFilterBar(),
+                                ],
+                              ),
                             ),
                           ),
                         ),
