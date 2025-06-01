@@ -292,7 +292,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                 MaterialPageRoute(builder: (context) => StudentHistoryPage(studentId: widget.studentId, studentName: widget.studentName)),
                               );
                             },
-                            child: Text('View History', style: TextStyle(color: Colors.white)),
+                            child: Text('View Past Quizzes', style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blueAccent,
                               shape: RoundedRectangleBorder(
@@ -305,52 +305,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     ),
                   ),
                 ),
-                /* Enroll in Class
-                Container(
-                  constraints: BoxConstraints(maxWidth: 600),
-                  child: Card(
-                    elevation: 8,
-                    margin: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    color: Colors.blue[50],
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Enroll in a Class',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blueAccent,
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          TextField(
-                            controller: _enrollClassIdController,
-                            decoration: InputDecoration(
-                              labelText: 'Class ID',
-                              prefixIcon: Icon(Icons.class_),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: _enrollInClass,
-                            child: Text('Enroll', style: TextStyle(color: Colors.white)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),*/
               ],
             ),
           ),

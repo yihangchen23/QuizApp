@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 15.0),
 
-                    // "Forgot Password?" text
+                    /* "Forgot Password?" text
                     GestureDetector(
                       onTap: () {
                         print('Navigate to Forgot Password screen');
@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     SizedBox(height: 30.0),
-
+                    */
                     // Sign-Up Link
                     GestureDetector(
                       onTap: () {

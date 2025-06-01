@@ -124,7 +124,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
   Future<Map<String, dynamic>> _gradeWithAI({
     required String question,
     required String expected,
-    required String points,
+    required int points,
     required String studentResponse,
   }) async {
     final url = Uri.parse('https://openrouter.ai/api/v1/chat/completions');
@@ -159,7 +159,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
             'flagged': false,
           };
         }
-        return {'feedback': content, 'score': 0};
+        return {'feedback': 'AI returned faulty formatting: $content', 'score': 0, 'flagged': true};
       } else {
         return {'feedback': 'AI grading failed.', 'score': 0, 'flagged': true};
       }
@@ -188,9 +188,9 @@ class _QuizModulePageState extends State<QuizModulePage> {
                   subtitle: ai == null
                       ? Text('Not answered.')
                       : Text(
-                          'AI Score: ${ai['score']}/10\nFeedback: ${ai['feedback']}',
+                          'AI Score: ${ai['score']}/${q['points']}\nFeedback: ${ai['feedback']}',
                           style: TextStyle(
-                            color: ai['score'] >= 7 ? Colors.green : Colors.red,
+                            color: (ai['score']/q['points']) >= 0.7 ? Colors.green : Colors.red,
                           ),
                         ),
                 ),
@@ -202,8 +202,8 @@ class _QuizModulePageState extends State<QuizModulePage> {
           TextButton(
             child: Text('Close', style: TextStyle(color: Colors.blue)),
             onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop(); // Go back to class page
+              Navigator.of(context).pop(); //pop to quiz_module
+              Navigator.of(context).pop('completed'); //pop to student_class
             },
           ),
         ],

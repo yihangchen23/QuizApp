@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 
 class StudentHistoryPage extends StatefulWidget {
   final String studentId;
@@ -97,94 +98,6 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
     }
   }
 
-  Widget _buildPerformanceChart() {
-    return Container(
-      height: 200,
-      padding: EdgeInsets.all(16),
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: 10,
-          barTouchData: BarTouchData(enabled: true),
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= _averageScoresByClass.length) {
-                    return const Text('');
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      _averageScoresByClass.keys.elementAt(value.toInt()),
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          borderData: FlBorderData(show: false),
-          barGroups: _averageScoresByClass.entries
-              .map(
-                (entry) => BarChartGroupData(
-                  x: _averageScoresByClass.keys.toList().indexOf(entry.key),
-                  barRods: [
-                    BarChartRodData(
-                      toY: entry.value,
-                      color: Colors.blue,
-                      width: 20,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ],
-                ),
-              )
-              .toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScoreTrendLine() {
-    return Container(
-      height: 200,
-      padding: EdgeInsets.all(16),
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(show: true),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: true),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-          ),
-          borderData: FlBorderData(show: true),
-          minX: 0,
-          maxX: _recentScores.length.toDouble() - 1,
-          minY: 0,
-          maxY: 10,
-          lineBarsData: [
-            LineChartBarData(
-              spots: _recentScores
-                  .asMap()
-                  .entries
-                  .map((e) => FlSpot(e.key.toDouble(), e.value))
-                  .toList(),
-              isCurved: true,
-              color: Colors.blue,
-              barWidth: 3,
-              dotData: FlDotData(show: true),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildClassSection(String className, List<dynamic> quizzes) {
     return Container(
       constraints: BoxConstraints(maxWidth: 600),
@@ -205,8 +118,8 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Average Score: ${quiz['average_score']?.toStringAsFixed(2) ?? 'N/A'}'),
-                    Text('Completed: ${quiz['completed_at'] ?? 'N/A'}'),
+                    Text('Total Score: ${quiz['average_score']?.toStringAsFixed(2) ?? 'N/A'}'),
+                    Text('Completed ${DateFormat.yMMMMd().add_jm().format(DateTime.parse(quiz['completed_at']).toLocal()) ?? 'N/A'}'),
                   ],
                 ),
                 trailing: IconButton(
@@ -387,37 +300,7 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
                   child: Center(
                     child: Column(
                       children: [
-                        Container(
-                          constraints: BoxConstraints(maxWidth: 600),
-                          child: Card(
-                            margin: EdgeInsets.all(16),
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Performance Overview',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(color: Colors.blue.shade900),
-                                  ),
-                                  _buildPerformanceChart(),
-                                  Divider(),
-                                  Text(
-                                    'Score Trend',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(color: Colors.blue.shade900),
-                                  ),
-                                  _buildScoreTrendLine(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        SizedBox(height: 24),
                         _buildFilters(), // Add filters section
                         ...filteredQuizzesByClass.entries
                             .where((entry) => entry.value.isNotEmpty)
@@ -428,7 +311,7 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
                           Padding(
                             padding: EdgeInsets.all(16),
                             child: Text(
-                              'No quizzes match the selected filters.',
+                              'No quizzes match the selected filters',
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 16,
