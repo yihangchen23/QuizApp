@@ -1,11 +1,7 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 class TeacherHistoryPage extends StatefulWidget {
   final String teacherId;
@@ -215,56 +211,6 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
     ); //TO-DO filter by quizzes with flagged answers
   }
 
-  Widget _buildClassPerformanceChart() {
-    return Container(
-      height: 300,
-      padding: EdgeInsets.all(16),
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: 10,
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= _classes.length) return const Text('');
-                  return RotatedBox(
-                    quarterTurns: 1,
-                    child: Text(
-                      _classes[value.toInt()]['name'],
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          barGroups: _classes.asMap().entries.map((entry) {
-            final className = entry.value['name'];
-            final averages = _studentAverages[className] ?? {};
-            final classAverage = averages.isEmpty
-                ? 0.0
-                : averages.values.reduce((a, b) => a + b) / averages.length;
-            
-            return BarChartGroupData(
-              x: entry.key,
-              barRods: [
-                BarChartRodData(
-                  toY: classAverage,
-                  color: Colors.blue,
-                  width: 20,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
   List<dynamic> _getFilteredQuizzes() {
     List<dynamic> filtered = [];
     
@@ -314,87 +260,6 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
         SnackBar(content: Text('Failed to update score: $e')),
       );
     }
-  }
-
-  Future<void> _exportToPDF() async {
-    final pdf = pw.Document();
-    final filtered = _getFilteredQuizzes();
-
-    pdf.addPage(
-      pw.MultiPage(
-        build: (context) => [
-          pw.Header(level: 0, child: pw.Text('Quiz History Report')),
-          pw.Header(level: 1, child: pw.Text('Generated on: ${DateTime.now()}')),
-          ...filtered.map((quiz) => pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Header(level: 2, child: pw.Text(quiz['quiz_title'])),
-              pw.Text('Student: ${quiz['student_name']}'),
-              pw.Text('Class: ${quiz['class_name']}'),
-              pw.Text('Score: ${quiz['average_score']?.toStringAsFixed(1) ?? 'N/A'}/10'),
-              ...((quiz['answers'] ?? []) as List).map((answer) => pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('Question: ${answer['question_text']}'),
-                  pw.Text('Answer: ${answer['student_response']}'),
-                  pw.Text('AI Score: ${answer['ai_score']?.toStringAsFixed(1) ?? 'N/A'}/10'),
-                  if (answer['teacher_override_score'] != null)
-                    pw.Text('Teacher Score: ${answer['teacher_override_score']?.toStringAsFixed(1)}/10'),
-                  pw.Text('AI Feedback: ${answer['ai_feedback']}'),
-                  if (answer['teacher_feedback'] != null)
-                    pw.Text('Teacher Feedback: ${answer['teacher_feedback']}'),
-                ],
-              )),
-              pw.Divider(),
-            ],
-          )),
-        ],
-      ),
-    );
-
-    final output = await getApplicationDocumentsDirectory();
-    final file = File('${output.path}/quiz_history.pdf');
-    await file.writeAsBytes(await pdf.save());
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('PDF saved to: ${file.path}')),
-    );
-  }
-
-  Future<void> _exportToCSV() async {
-    final filtered = _getFilteredQuizzes();
-    final List<List<dynamic>> rows = [
-      // Header
-      ['Quiz Title', 'Student Name', 'Class', 'Score', 'Question', 'Answer', 
-       'AI Score', 'Teacher Score', 'AI Feedback', 'Teacher Feedback'],
-    ];
-
-    // Data rows
-    for (final quiz in filtered) {
-      for (final answer in (quiz['answers'] ?? [])) {
-        rows.add([
-          quiz['quiz_title'],
-          quiz['student_name'],
-          quiz['class_name'],
-          quiz['average_score']?.toStringAsFixed(1) ?? 'N/A',
-          answer['question_text'],
-          answer['student_response'],
-          answer['ai_score']?.toStringAsFixed(1) ?? 'N/A',
-          answer['teacher_override_score']?.toStringAsFixed(1) ?? '',
-          answer['ai_feedback'],
-          answer['teacher_feedback'] ?? '',
-        ]);
-      }
-    }
-
-    final csv = const ListToCsvConverter().convert(rows);
-    final output = await getApplicationDocumentsDirectory();
-    final file = File('${output.path}/quiz_history.csv');
-    await file.writeAsString(csv);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('CSV saved to: ${file.path}')),
-    );
   }
 
   // Modify the _buildQuizList() method to include override functionality:
@@ -538,16 +403,6 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
         backgroundColor: Colors.blue.shade700,
         actions: [
           IconButton(
-            icon: Icon(Icons.picture_as_pdf),
-            onPressed: _exportToPDF,
-            tooltip: 'Export to PDF',
-          ),
-          IconButton(
-            icon: Icon(Icons.table_chart),
-            onPressed: _exportToCSV,
-            tooltip: 'Export to CSV',
-          ),
-          IconButton(
             icon: Icon(Icons.refresh),
             onPressed: _fetchTeacherHistory,
             tooltip: 'Refresh',
@@ -567,28 +422,6 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
                   child: Center(
                     child: Column(
                       children: [
-                        Container(
-                          constraints: BoxConstraints(maxWidth: 800),
-                          child: Card(
-                            margin: EdgeInsets.all(16),
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Class Performance Overview',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(color: Colors.blue.shade900),
-                                  ),
-                                  _buildClassPerformanceChart(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                         _buildFilters(),
                         _buildQuizList(),
                       ],
