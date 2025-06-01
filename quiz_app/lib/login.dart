@@ -44,125 +44,130 @@ class _LoginScreenState extends State<LoginScreen> {
                       curve: Curves.easeOut,
                       width: 120.0,
                       height: 120.0,
-                      child: Image.asset('../assets/logo.jpg'), // Replace with your logo
-                    ),
-                    SizedBox(height: 40.0),
-
-                    // Username Field
-                    TextField(
-                      controller: _usernameController,
-                      decoration: InputDecoration(
-                        labelText: 'Username',
-                        labelStyle: TextStyle(
-                          color: Colors.blueAccent,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        prefixIcon: Icon(Icons.person, color: Colors.blueAccent),
-                        filled: true,
-                        fillColor: Colors.blueGrey.withOpacity(0.1),
-                        contentPadding: EdgeInsets.symmetric(vertical: 18.0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30.0),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 25.0),
-
-                    // Password Field
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _isObscure,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        labelStyle: TextStyle(
-                          color: Colors.blueAccent,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        prefixIcon: Icon(Icons.lock, color: Colors.blueAccent),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isObscure ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.blueAccent,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isObscure = !_isObscure;
-                            });
-                          },
-                        ),
-                        filled: true,
-                        fillColor: Colors.blueGrey.withOpacity(0.1),
-                        contentPadding: EdgeInsets.symmetric(vertical: 18.0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30.0),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 30.0),
-
-                    // Error message
-                    if (_errorMessage.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Text(
-                          _errorMessage,
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-
-                    // Login Button
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _login,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 40.0),
-                        child: _isLoading
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                                'Log In',
-                                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                              ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30.0),
-                        ),
-                        elevation: 5.0,
-                      ),
+                      child: Image.asset('../assets/logo.png'), // Replace with your logo
                     ),
                     SizedBox(height: 15.0),
-
-                    /* "Forgot Password?" text
-                    GestureDetector(
-                      onTap: () {
-                        print('Navigate to Forgot Password screen');
-                      },
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: Colors.blueAccent,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    Text(
+                      'KwikGrade',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40, color: Colors.blue.shade900),
                     ),
-                    SizedBox(height: 30.0),
-                    */
-                    // Sign-Up Link
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
-                      },
-                      child: Text(
-                        'Don\'t have an account? Sign Up',
-                        style: TextStyle(
-                          color: Colors.blueAccent,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
+                    Text(
+                      'AI graded quizzes',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blueAccent),
+                    ),
+                    SizedBox(height: 40.0),
+                    Card (
+                       elevation: 8,
+                      margin: EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      color: Colors.blue[50],
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column (
+                          children: [
+                            // Username Field
+                            TextField(
+                              controller: _usernameController,
+                              decoration: InputDecoration(
+                                labelText: 'Username',
+                                labelStyle: TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                prefixIcon: Icon(Icons.person, color: Colors.blueAccent),
+                                filled: true,
+                                fillColor: Colors.blueGrey.withOpacity(0.1),
+                                contentPadding: EdgeInsets.symmetric(vertical: 18.0),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 25.0),
+
+                            // Password Field
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: _isObscure,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                labelStyle: TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                prefixIcon: Icon(Icons.lock, color: Colors.blueAccent),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isObscure ? Icons.visibility_off : Icons.visibility,
+                                    color: Colors.blueAccent,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isObscure = !_isObscure;
+                                    });
+                                  },
+                                ),
+                                filled: true,
+                                fillColor: Colors.blueGrey.withOpacity(0.1),
+                                contentPadding: EdgeInsets.symmetric(vertical: 18.0),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 30.0),
+
+                            // Error message
+                            if (_errorMessage.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Text(
+                                  _errorMessage,
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+
+                            // Login Button
+                            ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 40.0),
+                                child: _isLoading
+                                    ? CircularProgressIndicator(color: Colors.white)
+                                    : Text(
+                                        'Log In',
+                                        style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                                      ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                ),
+                                elevation: 5.0,
+                              ),
+                            ),
+                            SizedBox(height: 15.0),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
+                              },
+                              child: Text(
+                                'Don\'t have an account? Sign Up',
+                                style: TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
