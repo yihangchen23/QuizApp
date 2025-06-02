@@ -244,24 +244,41 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
   }
 
   Future<void> _updateAnswerScore(String answerId, double newScore, String teacherFeedback) async {
+    if (answerId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: Cannot identify answer to update')),
+      );
+      return;
+    }
+
     try {
-      await Supabase.instance.client.from('answers').update({
-        'teacher_override_score': newScore,
-        'ai_feedback': teacherFeedback,
-        'reviewed_by_teacher': true, 
-      }).eq('id', answerId);
+      // Debug print to verify the values
+      print('Updating answer $answerId with score: $newScore and feedback: $teacherFeedback');
+
+      final response = await Supabase.instance.client
+          .from('answers')
+          .update({
+            'ai_score': newScore,
+            'ai_feedback': teacherFeedback,  // Fixed: Changed from ai_feedback to teacher_feedback
+            'reviewed_by_teacher': true,
+          })
+          .eq('id', answerId)
+          .select()  // Add select() to get the updated record
+          .single();
+
+      // Debug print to verify the update
+      print('Update response: $response');
       
-      await _fetchTeacherHistory(); // Refresh data
+      await _fetchTeacherHistory();
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Score updated successfully')),
       );
-      //Navigator.of(context).pop();
     } catch (e) {
-      print(e);
+      print('Error updating score: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update score: $e')),
+        SnackBar(content: Text('Failed to update score. Please try again.')),
       );
-      //Navigator.of(context).pop();
     }
   }
 
@@ -303,27 +320,52 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
                     Divider(),
                     ...((quiz['answers'] ?? []) as List).map((answer) => 
                       ListTile(
-                        title: Text(answer['question_text']),
+                        title: Text(answer['question_text'] ?? 'No question text'),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Answer: ${answer['student_response']}'),
+                            Text('Answer: ${answer['student_response'] ?? 'No response'}'),
+                            if (answer['teacher_override_score'] != null) 
+                              Text(
+                                'Teacher Score: ${answer['teacher_override_score']}/10',
+                                style: TextStyle(
+                                  color: (answer['teacher_override_score'] ?? 0) >= 7 
+                                      ? Colors.lime 
+                                      : Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             Text(
-                              'Score: ${answer['ai_score']?.toString() ?? 'N/A'}/10',
+                              'AI Score: ${answer['ai_score']?.toString() ?? 'N/A'}/10',
                               style: TextStyle(
                                 color: (answer['ai_score'] ?? 0) >= 7 
                                     ? Colors.lime 
                                     : Colors.red,
                               ),
                             ),
-                            Text('Feedback: ${answer['ai_feedback']}'),
-                            Text(//temporary flagging indicator, probably replace with a warning icon or similar (idk why it just says null, no clue what im missing)
-                              'Flagged: ${answer['flagged_for_review']}'
-                            ),
+                            if (answer['teacher_feedback'] != null)
+                              Text('Teacher Feedback: ${answer['teacher_feedback']}'),
+                            Text('AI Feedback: ${answer['ai_feedback'] ?? 'No feedback'}'),
+                            if (answer['flagged_for_review'] == true)
+                              Row(
+                                children: [
+                                  Icon(Icons.warning, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Flagged for Review',
+                                    style: TextStyle(color: Colors.orange),
+                                  ),
+                                ],
+                              ),
                           ],
                         ),
                         trailing: IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: Icon(
+                            Icons.edit,
+                            color: answer['reviewed_by_teacher'] == true 
+                                ? Colors.lime
+                                : Colors.grey,
+                          ),
                           onPressed: () => _showOverrideDialog(answer),
                         ),
                       ),
@@ -382,8 +424,6 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
             child: Text('Save'),
             onPressed: () {
               final score = double.tryParse(scoreController.text);
-              print('${
-                  feedbackController}');
               if (score != null && score >= 0 && score <= 10) {
                 _updateAnswerScore(
                   answer['id'],
