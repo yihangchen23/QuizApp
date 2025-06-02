@@ -5,6 +5,7 @@ import 'package:quiz_app/teacher_dashboard.dart';
 import 'package:quiz_app/student_dashboard.dart';
 import 'package:crypto/crypto.dart'; // for SHA256 hashing
 import 'dart:convert'; // for utf8.encode
+import 'package:quiz_app/main.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -16,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isObscure = true;
   bool _isLoading = false;
-  String _errorMessage = '';
 
   // SHA256 Hashing Function
   String _generateSha256Hash(String password) {
@@ -49,20 +49,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(height: 15.0),
                     Text(
                       'KwikGrade',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40, color: Colors.blue.shade900),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40, color: Colors.black),
                     ),
                     Text(
                       'AI graded quizzes',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blueAccent),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.lightGreen.shade900),
                     ),
                     SizedBox(height: 40.0),
                     Card (
-                       elevation: 8,
-                      margin: EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      color: Colors.blue[50],
+                      elevation: 8,
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column (
@@ -73,12 +68,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Username',
                                 labelStyle: TextStyle(
-                                  color: Colors.blueAccent,
+                                  color: Colors.lightGreen,
                                   fontWeight: FontWeight.w500,
                                 ),
-                                prefixIcon: Icon(Icons.person, color: Colors.blueAccent),
+                                prefixIcon: Icon(Icons.person, color: Colors.lightGreen),
                                 filled: true,
-                                fillColor: Colors.blueGrey.withOpacity(0.1),
+                                fillColor: Colors.grey.withOpacity(0.1),
                                 contentPadding: EdgeInsets.symmetric(vertical: 18.0),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(30.0),
@@ -94,14 +89,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 labelStyle: TextStyle(
-                                  color: Colors.blueAccent,
+                                  color: Colors.lightGreen,
                                   fontWeight: FontWeight.w500,
                                 ),
-                                prefixIcon: Icon(Icons.lock, color: Colors.blueAccent),
+                                prefixIcon: Icon(Icons.lock, color: Colors.lightGreen),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _isObscure ? Icons.visibility_off : Icons.visibility,
-                                    color: Colors.blueAccent,
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -110,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   },
                                 ),
                                 filled: true,
-                                fillColor: Colors.blueGrey.withOpacity(0.1),
+                                fillColor: Colors.grey.withOpacity(0.1),
                                 contentPadding: EdgeInsets.symmetric(vertical: 18.0),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(30.0),
@@ -118,20 +112,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             SizedBox(height: 30.0),
-
-                            // Error message
-                            if (_errorMessage.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Text(
-                                  _errorMessage,
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
 
                             // Login Button
                             ElevatedButton(
@@ -142,15 +122,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ? CircularProgressIndicator(color: Colors.white)
                                     : Text(
                                         'Log In',
-                                        style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
                                       ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
+                                backgroundColor: Colors.lime,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30.0),
                                 ),
-                                elevation: 5.0,
+                                elevation: 8,
                               ),
                             ),
                             SizedBox(height: 15.0),
@@ -161,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 'Don\'t have an account? Sign Up',
                                 style: TextStyle(
-                                  color: Colors.blueAccent,
+                                  color: Colors.lime.shade700,
                                   fontSize: 16.0,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -184,7 +164,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
     });
 
     final String username = _usernameController.text;
@@ -193,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (username.isEmpty || password.isEmpty) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Please fill out both fields';
+        QuizApp.errorSnackBar(context, 'Please fill out both fields');
       });
       return;
     }
@@ -233,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'Invalid password for teacher account';
+            QuizApp.errorSnackBar(context, 'Invalid username or password');
           });
         }
       }
@@ -258,19 +237,19 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'Invalid password for student account';
+            QuizApp.errorSnackBar(context, 'Invalid username or password');
           });
         }
       } else {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'User not found in teachers or students database.';
+          QuizApp.errorSnackBar(context, 'Invalid username or password');
         });
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'An error occurred. Please try again.';
+        QuizApp.errorSnackBar(context, 'An error occurred. Please try again.');
         print('login error: $e');
       });
     }

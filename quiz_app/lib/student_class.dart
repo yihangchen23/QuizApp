@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quiz_app/quiz_module.dart';
 import 'package:intl/intl.dart';
+import 'package:quiz_app/main.dart';
 
 class StudentClassPage extends StatefulWidget {
   final String studentId;
@@ -23,7 +24,6 @@ class StudentClassPage extends StatefulWidget {
 
 class _StudentClassPageState extends State<StudentClassPage> {
   bool _isLoading = true;
-  String _errorMessage = '';
   List<dynamic> _quizzes = [];
   String _search = '';
 
@@ -36,7 +36,6 @@ class _StudentClassPageState extends State<StudentClassPage> {
   Future<void> _fetchStudentQuizzes() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
     });
     try {
       final quizzesRes = await Supabase.instance.client
@@ -53,7 +52,7 @@ class _StudentClassPageState extends State<StudentClassPage> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load quizzes. Please try again.';
+        QuizApp.errorSnackBar(context, 'Failed to load quizzes. Please refresh.');
         _isLoading = false;
       });
     }
@@ -111,8 +110,8 @@ Widget _buildQuizList() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Text(
-        'All available quizzes completed!',
-        style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+        'No available quizzes',
+        style: TextStyle(color: Colors.lime.shade700, fontSize: 16),
       ),
     );
   }
@@ -123,20 +122,16 @@ Widget _buildQuizList() {
         margin: EdgeInsets.symmetric(vertical: 8),
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: isOpen ? Colors.green[50] : Colors.grey[100],
+        color: isOpen ? Colors.lime[50] : Colors.grey[100],
         child: ListTile(
           leading: Icon(
             isOpen ? Icons.lock_open : Icons.lock_outline,
-            color: isOpen ? Colors.green : Colors.redAccent,
+            color: isOpen ? Colors.lightGreenAccent.shade700 : Colors.redAccent,
             size: 32,
           ),
           title: Text(
             quiz['quiz_title'] ?? 'Untitled Quiz',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue.shade900,
-              fontSize: 17,
-            ),
+            style: TextStyle(fontSize: 18, color: Colors.lightGreen.shade800, fontWeight: FontWeight.bold),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,13 +148,13 @@ Widget _buildQuizList() {
                 '${quiz['quiz_closes_at'] != null?
                   'Due ${DateFormat.yMMMMd().add_jm().format(DateTime.parse(quiz['quiz_closes_at']).toLocal())}'
                   : 'No due date'}',
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                style: TextStyle(color: Colors.lightGreen),
               ),
               Text(
                 '${isOpen ? 'Open' : 'Closed'}',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: isOpen ? Colors.green : Colors.redAccent,
+                  color: isOpen ? Colors.lightGreenAccent.shade700 : Colors.redAccent,
                 ),
               ),
             ],
@@ -192,7 +187,7 @@ Widget _buildQuizList() {
           width: 220,
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Search quiz by name',
+              hintText: 'Search for a quiz',
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -215,7 +210,6 @@ Widget _buildQuizList() {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue.shade700,
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -226,52 +220,29 @@ Widget _buildQuizList() {
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-              ? Center(
+          : Center(
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Card(
+                  color: Colors.lightGreen,
+                  elevation: 8,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      _errorMessage,
-                      style: TextStyle(color: Colors.red.shade700, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              : Center(
-                  child: SingleChildScrollView(
-                    physics: AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
+                        Text(
+                          widget.className,
+                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 30),
+                        ),
+                        SizedBox(height: 24),
                         // Filter/Search Bar
                         Container(
                           constraints: BoxConstraints(maxWidth: 600),
                           child: Card(
-                            elevation: 4,
-                            margin: EdgeInsets.symmetric(vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            color: Colors.blue[50],
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Text(
-                                      widget.className,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 24,
-                                        color: Colors.blue.shade900,
-                                      ),
-                                    ),
-                                  ),
-                                  _buildFilterBar(),
-                                ],
-                              ),
+                              child: _buildFilterBar(),
                             ),
                           ),
                         ),
@@ -279,12 +250,6 @@ Widget _buildQuizList() {
                         Container(
                           constraints: BoxConstraints(maxWidth: 600),
                           child: Card(
-                            elevation: 8,
-                            margin: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            color: Colors.blue[50],
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
@@ -292,7 +257,7 @@ Widget _buildQuizList() {
                                 children: [
                                   Text(
                                     'Available Quizzes',
-                                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
                                   ),
                                   SizedBox(height: 20),
                                   _buildQuizList(),
@@ -305,6 +270,8 @@ Widget _buildQuizList() {
                     ),
                   ),
                 ),
+              ),
+            ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:quiz_app/main.dart';
 
 class TeacherHistoryPage extends StatefulWidget {
   final String teacherId;
@@ -19,7 +20,6 @@ class TeacherHistoryPage extends StatefulWidget {
 
 class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
   bool _isLoading = true;
-  String _errorMessage = '';
   List<dynamic> _classes = [];
   Map<String, List<dynamic>> _quizzesByClass = {};
   Map<String, List<dynamic>> _studentsByClass = {};
@@ -93,7 +93,7 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
       setState(() => _isLoading = false);
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load history: $e';
+        QuizApp.errorSnackBar(context, 'Failed to load history');
         _isLoading = false;
       });
     }
@@ -115,7 +115,7 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade900,
+                  color: Colors.lime.shade900,
                 ),
               ),
               SizedBox(height: 16),
@@ -287,7 +287,7 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
             title: Text(quiz['quiz_title']),
             subtitle: Text(
               'Student: ${quiz['student_name']} | ' 
-              'Score: ${quiz['average_score']?.toStringAsFixed(1) ?? 'N/A'}/10',
+              'Quiz Score: ${quiz['average_score']?.toStringAsFixed(1) ?? 'N/A'}/10',
             ),
             children: [
               Padding(
@@ -306,10 +306,10 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
                           children: [
                             Text('Answer: ${answer['student_response']}'),
                             Text(
-                              'Score: ${answer['ai_score']?.toStringAsFixed(1) ?? 'N/A'}/10',
+                              'Score: ${answer['ai_score']?.toString() ?? 'N/A'}/10',
                               style: TextStyle(
                                 color: (answer['ai_score'] ?? 0) >= 7 
-                                    ? Colors.green 
+                                    ? Colors.lime 
                                     : Colors.red,
                               ),
                             ),
@@ -400,7 +400,7 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Teacher History'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: Colors.lime.shade700,
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -411,23 +411,16 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-              ? Center(
-                  child: Text(
-                    _errorMessage,
-                    style: TextStyle(color: Colors.red),
-                  ),
-                )
-              : SingleChildScrollView(
-                  child: Center(
-                    child: Column(
-                      children: [
-                        _buildFilters(),
-                        _buildQuizList(),
-                      ],
-                    ),
-                  ),
+          : SingleChildScrollView(
+              child: Center(
+                child: Column(
+                  children: [
+                    _buildFilters(),
+                    _buildQuizList(),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 }

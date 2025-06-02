@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quiz_app/login.dart';
 import 'package:quiz_app/student_class.dart';
 import 'package:quiz_app/student_history.dart';
+import 'package:quiz_app/main.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   final String studentId;
@@ -17,7 +18,6 @@ class StudentDashboardScreen extends StatefulWidget {
 class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   bool _isLoading = true;
   List<dynamic> _classes = [];
-  //String _errorMessage = '';
   final _enrollClassIdController = TextEditingController();
 
   @override
@@ -31,7 +31,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   Future<void> _fetchClasses(BuildContext context) async {
     setState(() {
       _isLoading = true;
-      //_errorMessage = '';
     });
 
     try {
@@ -45,8 +44,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       });
     } catch (e) {
       setState(() {
-        //_errorMessage = 'Error fetching classes.';
-        errorSnackBar(context, 'Error fetching classes');
+        QuizApp.errorSnackBar(context, 'Error fetching classes');
         print('Error: $e');
       });
     } finally {
@@ -54,22 +52,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         _isLoading = false;
       });
     }
-  }
-
-  void errorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.error, color: Colors.white),
-            SizedBox(width: 16),
-            Text(message, style: TextStyle(color: Colors.white)),
-          ],
-        ),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 3),
-      ),
-    );
   }
 
   void _enrollmentDialog(BuildContext context) {
@@ -82,7 +64,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.blueAccent,
+              color: Colors.limeAccent.shade400,
             ),
           ),
           content: Form(
@@ -117,8 +99,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     
     if (classId.isEmpty) {
       setState(() {
-        //_errorMessage = 'Please enter a class ID.';
-        errorSnackBar(context, 'Please enter a class ID');
+        QuizApp.errorSnackBar(context, 'Please enter a class ID');
       });
       return;
     }
@@ -131,8 +112,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       _fetchClasses(context);
     } catch (e) {
       setState(() {
-        //_errorMessage = 'Failed to enroll. Ensure class ID is valid.';
-        errorSnackBar(context, 'Failed to enroll. Ensure class ID is valid.');
+        QuizApp.errorSnackBar(context, 'Failed to enroll. Ensure class ID is valid.');
         print('Enroll Error: $e');
       });
     }
@@ -155,28 +135,16 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             child: Row(
               children: [
                 SizedBox(width: 18),
-                CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.blue.shade700,
-                child: Text(
-                  widget.studentName.substring(0, 1).toUpperCase(),
-                  style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 600),
+                  curve: Curves.easeOut,
+                  width: 56,
+                  height: 56,
+                  child: Image.asset('../assets/logo.png'), // Replace with your logo
                 ),
-                ),
-                SizedBox(width: 18),
-                Text(
-                  widget.studentName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                    color: Colors.blue.shade900,
-                  ),
-                )
               ],
             ),
           ),
-          backgroundColor: Colors.blueAccent,
-          elevation: 0,
           automaticallyImplyLeading: false,
           actions: [
             IconButton(
@@ -189,123 +157,133 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       ),
       body: Center(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Student Dashboard',
-                  style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 32),
-                // Classes
-                Container(
-                  constraints: BoxConstraints(maxWidth: 600),
-                  child: Card(
-                    elevation: 8,
-                    margin: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+          child: Card(
+            color: Colors.lightGreen,
+            elevation: 8,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.deepOrange.shade800,
+                    child: Text(
+                      widget.studentName.substring(0, 1).toUpperCase(),
+                      style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
                     ),
-                    color: Colors.blue[50],
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Stack(
-                        children: [
-                          Column(
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    widget.studentName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                      color: Colors.lightGreen.shade900,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Student Dashboard',
+                    style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 32),
+                  // Classes
+                  Container(
+                    constraints: BoxConstraints(maxWidth: 600),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Stack(
+                          children: [
+                            Column(
+                            children: [
+                              Text(
+                                'Classes',
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
+                              ),
+                              SizedBox(height: 20),
+                              if (_isLoading)
+                                CircularProgressIndicator()
+                              else if (_classes.isEmpty)
+                                Text('You are not enrolled in any classes yet.'),
+                              if (_classes.isNotEmpty)
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  itemCount: _classes.length,
+                                  itemBuilder: (context, index) {
+                                    final classItem = _classes[index];
+                                    return Card(
+                                      margin: EdgeInsets.symmetric(vertical: 8),
+                                      color: Colors.white,
+                                      elevation: 8,
+                                      child: ListTile(
+                                        contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                                        title: Text(classItem['class_name'], style: TextStyle(fontSize: 18, color: Colors.lightGreen.shade800, fontWeight: FontWeight.bold)),
+                                        subtitle: Text('Teacher: ${classItem['teacher_name']}', style: TextStyle(color: Colors.lightGreen)),
+                                        onTap: () { 
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => StudentClassPage(studentId: widget.studentId, studentName: widget.studentName, classId: classItem['class_id'], className: classItem['class_name']))
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: IconButton(
+                                icon: Icon(Icons.add),
+                                onPressed: () => _enrollmentDialog(context),
+                                tooltip: 'Add a Class',
+                              )
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  //History
+                  Container(
+                    constraints: BoxConstraints(maxWidth: 600),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
                           children: [
                             Text(
-                              'Classes',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                              'Performance History',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
                             ),
                             SizedBox(height: 20),
-                            if (_isLoading)
-                              CircularProgressIndicator()
-                            //else if (_errorMessage.isNotEmpty)
-                            //  Text(_errorMessage, style: TextStyle(color: Colors.red))
-                            else if (_classes.isEmpty)
-                              Text('You are not enrolled in any classes yet.'),
-                            if (_classes.isNotEmpty)
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount: _classes.length,
-                                itemBuilder: (context, index) {
-                                  final classItem = _classes[index];
-                                  return Card(
-                                    margin: EdgeInsets.symmetric(vertical: 8),
-                                    color: Colors.blue[100],
-                                    child: ListTile(
-                                      contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                                      title: Text(classItem['class_name'], style: TextStyle(fontSize: 18)),
-                                      subtitle: Text('Teacher: ${classItem['teacher_name']}'),
-                                      onTap: () { 
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(builder: (context) => StudentClassPage(studentId: widget.studentId, studentName: widget.studentName, classId: classItem['class_id'], className: classItem['class_name']))
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: IconButton(
-                              icon: Icon(Icons.add),
-                              onPressed: () => _enrollmentDialog(context),
-                              tooltip: 'Add a Class',
-                            )
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                //History
-                Container(
-                  constraints: BoxConstraints(maxWidth: 600),
-                  child: Card(
-                    elevation: 8,
-                    margin: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    color: Colors.blue[50],
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Performance History',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
-                          ),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => StudentHistoryPage(studentId: widget.studentId, studentName: widget.studentName)),
-                              );
-                            },
-                            child: Text('View Past Quizzes', style: TextStyle(color: Colors.white)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => StudentHistoryPage(studentId: widget.studentId, studentName: widget.studentName)),
+                                );
+                              },
+                              child: Text('View Past Quizzes', style: TextStyle(fontSize: 16, color: Colors.lime.shade900)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.lime,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                elevation: 8,
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

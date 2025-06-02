@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:quiz_app/main.dart';
 
 class StudentHistoryPage extends StatefulWidget {
   final String studentId;
@@ -18,7 +19,6 @@ class StudentHistoryPage extends StatefulWidget {
 
 class _StudentHistoryPageState extends State<StudentHistoryPage> {
   bool _isLoading = true;
-  String _errorMessage = '';
   Map<String, List<dynamic>> _quizzesByClass = {};
   List<dynamic> _classes = [];
   Map<String, double> _averageScoresByClass = {};
@@ -35,7 +35,6 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
   Future<void> _fetchStudentHistory() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
     });
 
     try {
@@ -91,7 +90,7 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load history. Please try again.';
+        QuizApp.errorSnackBar(context, 'Failed to load history. Please try again.');
         _isLoading = false;
       });
     }
@@ -101,33 +100,36 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
     return Container(
       constraints: BoxConstraints(maxWidth: 600),
       child: Card(
-        elevation: 4,
-        margin: EdgeInsets.symmetric(vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: ExpansionTile(
-          title: Text(
-            className,
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: ExpansionTile(
+            title: Text(
+              className,
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.lime.shade900),
+            ),
+            children: quizzes.map((quiz) {
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 12),
+                color: Colors.white,
+                elevation: 8,
+                child: ListTile(
+                  title: Text(quiz['quiz_title'] ?? 'Untitled Quiz', style: TextStyle(fontSize: 18, color: Colors.lightGreen.shade800, fontWeight: FontWeight.bold)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Quiz Score: ${quiz['average_score']?.toStringAsFixed(2) ?? 'N/A'}', style: TextStyle(color: Colors.lightGreen)),
+                      Text('Completed ${DateFormat.yMMMMd().add_jm().format(DateTime.parse(quiz['completed_at']).toLocal()) ?? 'N/A'}', style: TextStyle(color: Colors.lightGreen)),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(Icons.visibility),
+                    tooltip: 'View Your Answers',
+                    onPressed: () => _showQuizDetails(quiz),
+                  ),
+                ),
+              );
+            }).toList(),  
           ),
-          children: quizzes.map((quiz) {
-            return Card(
-              margin: EdgeInsets.all(8),
-              child: ListTile(
-                title: Text(quiz['quiz_title'] ?? 'Untitled Quiz'),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Total Score: ${quiz['average_score']?.toStringAsFixed(2) ?? 'N/A'}'),
-                    Text('Completed ${DateFormat.yMMMMd().add_jm().format(DateTime.parse(quiz['completed_at']).toLocal()) ?? 'N/A'}'),
-                  ],
-                ),
-                trailing: IconButton(
-                  icon: Icon(Icons.visibility),
-                  onPressed: () => _showQuizDetails(quiz),
-                ),
-              ),
-            );
-          }).toList(),
         ),
       ),
     );
@@ -147,6 +149,7 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
               Divider(),
               if (quiz['answers'] != null) ...[
                 ...quiz['answers'].map((answer) => Card(
+                      color: Colors.white,
                       margin: EdgeInsets.symmetric(vertical: 8),
                       child: Padding(
                         padding: EdgeInsets.all(8),
@@ -160,10 +163,10 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
                             SizedBox(height: 8),
                             Text('Your Answer: ${answer['student_response']}'),
                             Text(
-                              'Score: ${answer['ai_score']?.toStringAsFixed(2) ?? 'N/A'}/10',
+                              'Score: ${answer['ai_score']?.toString() ?? 'N/A'}/10',
                               style: TextStyle(
                                 color: (answer['ai_score'] ?? 0) >= 7
-                                    ? Colors.green
+                                    ? Colors.lightGreen
                                     : Colors.red,
                               ),
                             ),
@@ -190,9 +193,6 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
     return Container(
       constraints: BoxConstraints(maxWidth: 600),
       child: Card(
-        elevation: 4,
-        margin: EdgeInsets.symmetric(vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: EdgeInsets.all(16),
           child: Column(
@@ -203,7 +203,7 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade900,
+                  color: Colors.lime.shade900,
                 ),
               ),
               SizedBox(height: 12),
@@ -286,41 +286,46 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Quiz History'),
-        backgroundColor: Colors.blue.shade700,
-      ),
+      appBar: AppBar(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-              ? Center(
-                  child: Text(_errorMessage, style: TextStyle(color: Colors.red)))
-              : SingleChildScrollView(
-                  child: Center(
-                    child: Column(
-                      children: [
-                        SizedBox(height: 24),
-                        _buildFilters(), // Add filters section
-                        ...filteredQuizzesByClass.entries
-                            .where((entry) => entry.value.isNotEmpty)
-                            .map(
-                              (entry) => _buildClassSection(entry.key, entry.value),
-                            ),
-                        if (filteredQuizzesByClass.values.every((v) => v.isEmpty))
-                          Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Text(
-                              'No quizzes match the selected filters',
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 16,
+          : SingleChildScrollView(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24),
+                  child: Card(
+                    color: Colors.lightGreen,
+                    elevation: 8,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24),
+                      child: Column(
+                        children: [
+                          Text('Quiz History', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 30)),
+                          SizedBox(height: 24),
+                          _buildFilters(), // Add filters section
+                          ...filteredQuizzesByClass.entries
+                              .where((entry) => entry.value.isNotEmpty)
+                              .map(
+                                (entry) => _buildClassSection(entry.key, entry.value),
+                              ),
+                          if (filteredQuizzesByClass.values.every((v) => v.isEmpty))
+                            Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Text(
+                                'No quizzes match the selected filters',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
+              ),
+            ),
     );
   }
 }

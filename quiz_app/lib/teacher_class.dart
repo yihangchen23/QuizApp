@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:quiz_app/main.dart';
 
 class TeacherClassPage extends StatefulWidget {
   final String classId;
@@ -18,7 +19,6 @@ class TeacherClassPage extends StatefulWidget {
 
 class _TeacherClassPageState extends State<TeacherClassPage> {
   bool _isLoading = true;
-  String _errorMessage = '';
   Map<String, dynamic>? _classInfo;
   List<dynamic> _students = [];
   List<dynamic> _quizzes = [];
@@ -45,7 +45,6 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
   Future<void> _fetchAll() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
     });
     try {
       final classRes = await Supabase.instance.client
@@ -73,7 +72,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load class data. Please try again.';
+        QuizApp.errorSnackBar(context, 'Failed to load class data. Please try again.');
         _isLoading = false;
       });
     }
@@ -97,25 +96,25 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
   // --- Validate the quiz + questions form ---
   bool _validateQuizAndQuestions() {
     if (_quizTitleController.text.trim().isEmpty) {
-      _showError('Quiz title is required.');
+      QuizApp.errorSnackBar(context, 'Quiz title is required.');
       return false;
     }
 
     if (_newQuestions.isEmpty) {
-      _showError('Please add at least one question.');
+      QuizApp.errorSnackBar(context, 'Please add at least one question.');
       return false;
     }
 
     for (var i = 0; i < _newQuestions.length; i++) {
       final q = _newQuestions[i];
       if (q.questionController.text.trim().isEmpty) {
-        _showError('Question ${i + 1} text is required.');
+        QuizApp.errorSnackBar(context, 'Question ${i + 1} text is required.');
         return false;
       }
       if (q.pointsController.text.trim().isNotEmpty) {
         final points = double.tryParse(q.pointsController.text.trim());
         if (points == null || points <= 0) {
-          _showError('Question ${i + 1} points must be a positive number.');
+          QuizApp.errorSnackBar(context, 'Question ${i + 1} points must be a positive number.');
           return false;
         }
       }
@@ -124,24 +123,11 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
     return true;
   }
 
-  void _showError(String message) {
-    setState(() {
-      _errorMessage = message;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red.shade700,
-      ),
-    );
-  }
-
   Future<void> _submitQuizWithQuestions() async {
     if (!_validateQuizAndQuestions()) return;
 
     setState(() {
       _isCreatingQuiz = true;
-      _errorMessage = '';
     });
 
     try {
@@ -208,7 +194,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
     } catch (e) {
       setState(() {
         _isCreatingQuiz = false;
-        _errorMessage = 'Error creating quiz and questions.';
+        QuizApp.errorSnackBar(context, 'Failed to create quiz. Please try again.');
         print(e);
       });
     }
@@ -222,7 +208,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
       child: Text(
         text,
         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.blue.shade900,
+              color: Colors.lime.shade900,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
             ),
@@ -245,11 +231,11 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: Colors.blue.shade700),
+                    color: Colors.lime.shade700),
               ),
             ),
             IconButton(
-              icon: Icon(Icons.copy, color: Colors.blue.shade700),
+              icon: Icon(Icons.copy, color: Colors.lime.shade700),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: widget.classId));
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -283,7 +269,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.blue.shade700,
+              backgroundColor: Colors.lime.shade700,
               child: Text(
                 (student['student_name'] as String).substring(0, 1).toUpperCase(),
                 style:
@@ -309,7 +295,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                     SnackBar(content: Text('Student removed from class.')),
                   );
                 } catch (e) {
-                  _showError('Failed to remove student.');
+                  QuizApp.errorSnackBar(context, 'Failed to remove student.');
                 }
               },
               splashRadius: 24,
@@ -338,7 +324,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
             title: Text(
               quiz['title'] ?? 'Untitled Quiz',
               style:
-                  TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.lime.shade900),
             ),
             subtitle: Text(quiz['description'] ?? ''),
             children: [
@@ -353,7 +339,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
               ),
               TextButton.icon(
                 onPressed: () => _showQuizQuestions(quiz['id']),
-                icon: Icon(Icons.question_answer, color: Colors.blue.shade700),
+                icon: Icon(Icons.question_answer, color: Colors.lime.shade700),
                 label: Text('View Questions'),
               ),
             ],
@@ -401,7 +387,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
           ),
           actions: [
             TextButton(
-              child: Text('Close', style: TextStyle(color: Colors.blue.shade700)),
+              child: Text('Close', style: TextStyle(color: Colors.lime.shade700)),
               onPressed: () => Navigator.of(context).pop(),
             )
           ],
@@ -427,7 +413,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                 Text(
                   'Question ${index + 1}',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.blue.shade800),
+                      fontWeight: FontWeight.bold, color: Colors.lime.shade800),
                 ),
                 Spacer(),
                 IconButton(
@@ -445,7 +431,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                 labelText: 'Question Text',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                prefixIcon: Icon(Icons.question_mark, color: Colors.blue.shade700),
+                prefixIcon: Icon(Icons.question_mark, color: Colors.lime.shade700),
               ),
               maxLines: 2,
             ),
@@ -453,38 +439,11 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
             TextField(
               controller: question.answerController,
               decoration: InputDecoration(
-                labelText: 'Expected Answer',
+                labelText: 'Expected Answer (optional)',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                prefixIcon: Icon(Icons.check_circle, color: Colors.green.shade700),
+                prefixIcon: Icon(Icons.check_circle, color: Colors.lime.shade700),
               ),
-              maxLines: 1,
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: question.keywordsController,
-              decoration: InputDecoration(
-                labelText: 'Expected Keywords (comma-separated)',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                prefixIcon: Icon(Icons.key, color: Colors.orange.shade700),
-              ),
-              maxLines: 1,
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: question.pointsController,
-              decoration: InputDecoration(
-                labelText: 'Points',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                prefixIcon: Icon(Icons.score, color: Colors.purple.shade700),
-              ),
-              keyboardType:
-                  TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
-              ],
               maxLines: 1,
             ),
           ],
@@ -504,10 +463,10 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Create New Quiz + Questions',
+              'Create New Quiz',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade900,
+                    color: Colors.lime.shade900,
                   ),
             ),
             SizedBox(height: 18),
@@ -519,7 +478,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                 labelText: 'Quiz Title',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: Icon(Icons.title, color: Colors.blue.shade700),
+                prefixIcon: Icon(Icons.title, color: Colors.lime.shade700),
               ),
             ),
             SizedBox(height: 14),
@@ -531,22 +490,9 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                 labelText: 'Quiz Description (optional)',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: Icon(Icons.description, color: Colors.blue.shade700),
+                prefixIcon: Icon(Icons.description, color: Colors.lime.shade700),
               ),
               maxLines: 2,
-            ),
-            SizedBox(height: 14),
-
-            // Schedule datetime
-            TextField(
-              controller: _quizScheduleController,
-              decoration: InputDecoration(
-                labelText: 'Scheduled At (ISO format, optional)',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: Icon(Icons.schedule, color: Colors.blue.shade700),
-                hintText: 'YYYY-MM-DDTHH:mm:ss',
-              ),
             ),
             SizedBox(height: 14),
 
@@ -554,7 +500,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
             TextField(
               controller: _quizCloseController,
               decoration: InputDecoration(
-                labelText: 'Closes At (ISO format)',
+                labelText: 'Due Date (optional)',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: Icon(Icons.timer_off, color: Colors.orange.shade700),
@@ -572,7 +518,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                   _isQuizOpen = val;
                 });
               },
-              activeColor: Colors.green.shade600,
+              activeColor: Colors.lime.shade600,
             ),
 
             Divider(height: 30, thickness: 1.2),
@@ -603,7 +549,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                       EdgeInsets.symmetric(horizontal: 26, vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
-                  backgroundColor: Colors.blue.shade700,
+                  backgroundColor: Colors.lime.shade700,
                 ),
               ),
             ),
@@ -652,107 +598,95 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_classInfo != null ? 'Class: ${_classInfo!['name']}' : 'Loading...'),
-        backgroundColor: Colors.blue.shade700,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      _errorMessage,
-                      style: TextStyle(color: Colors.red.shade700, fontSize: 16),
-                      textAlign: TextAlign.center,
+          : Center(
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Enrollment Code Card
+                    Container(
+                      constraints: BoxConstraints(maxWidth: 600),
+                      child: Card(
+                        elevation: 8,
+                        margin: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        color: Colors.lime[50],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: _buildEnrollmentCode(),
+                        ),
+                      ),
                     ),
-                  ),
-                )
-              : Center(
-                  child: SingleChildScrollView(
-                    physics: AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Enrollment Code Card
-                        Container(
-                          constraints: BoxConstraints(maxWidth: 600),
-                          child: Card(
-                            elevation: 8,
-                            margin: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            color: Colors.blue[50],
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: _buildEnrollmentCode(),
-                            ),
+                    // Students Card
+                    Container(
+                      constraints: BoxConstraints(maxWidth: 600),
+                      child: Card(
+                        elevation: 8,
+                        margin: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        color: Colors.lime[50],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle('Students'),
+                              _buildStudentList(),
+                            ],
                           ),
                         ),
-                        // Students Card
-                        Container(
-                          constraints: BoxConstraints(maxWidth: 600),
-                          child: Card(
-                            elevation: 8,
-                            margin: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            color: Colors.blue[50],
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _sectionTitle('Students'),
-                                  _buildStudentList(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Quizzes Card
-                        Container(
-                          constraints: BoxConstraints(maxWidth: 600),
-                          child: Card(
-                            elevation: 8,
-                            margin: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            color: Colors.blue[50],
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _sectionTitle('Quizzes'),
-                                  _buildQuizList(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Create Quiz Card
-                        Container(
-                          constraints: BoxConstraints(maxWidth: 600),
-                          child: Card(
-                            elevation: 8,
-                            margin: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            color: Colors.blue[50],
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: _buildCreateQuizAndQuestionsSection(),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    // Quizzes Card
+                    Container(
+                      constraints: BoxConstraints(maxWidth: 600),
+                      child: Card(
+                        elevation: 8,
+                        margin: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        color: Colors.lime[50],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle('Quizzes'),
+                              _buildQuizList(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Create Quiz Card
+                    Container(
+                      constraints: BoxConstraints(maxWidth: 600),
+                      child: Card(
+                        elevation: 8,
+                        margin: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        color: Colors.lime[50],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: _buildCreateQuizAndQuestionsSection(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 }

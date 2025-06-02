@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quiz_app/login.dart';
 import 'package:quiz_app/teacher_class.dart';
 import 'package:quiz_app/teacher_history.dart';
+import 'package:quiz_app/main.dart';
 
 class TeacherDashboardScreen extends StatefulWidget {
   final String teacherId;
@@ -44,12 +45,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         });
       } else {
         setState(() {
-          _errorMessage = 'You have no classes....';
+          _errorMessage = 'You have no classes.';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'An error occurred. Please try again.';
+        QuizApp.errorSnackBar(context, 'Failed to fetch classes. Please try again.');
       });
       print('Error fetching classes: $e');
     } finally {
@@ -64,7 +65,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
     if (className.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter a class name.';
+        QuizApp.errorSnackBar(context, 'Please enter a class name.');
       });
       return;
     }
@@ -79,17 +80,16 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
       if (response.error == null) {
         setState(() {
-          _errorMessage = '';
           _fetchClasses();
         });
       } else {
         setState(() {
-          _errorMessage = 'Failed to create class.';
+          QuizApp.errorSnackBar(context, 'Failed to create class.');
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'An error occurred. Please try again.';
+        QuizApp.errorSnackBar(context, 'An error occurred. Please try again.');
       });
       print('Error creating class: $e');
     }
@@ -114,17 +114,32 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: _logout,
-            tooltip: 'Logout',
+      appBar:  PreferredSize(
+        preferredSize: Size.fromHeight(85.0),
+        child: AppBar(
+          flexibleSpace: Center(
+            child: Row(
+              children: [
+                SizedBox(width: 18),
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 600),
+                  curve: Curves.easeOut,
+                  width: 56,
+                  height: 56,
+                  child: Image.asset('../assets/logo.png'), // Replace with your logo
+                ),
+              ],
+            ),
           ),
-        ],
+          automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.exit_to_app),
+              onPressed: _logout,
+              tooltip: 'Logout',
+            ),
+          ],
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -142,7 +157,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    color: Colors.blue[50], // Lighter blue background
+                    color: Colors.lime[50], // Lighter lime background
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -152,7 +167,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blueAccent,
+                              color: Colors.limeAccent.shade400,
                             ),
                           ),
                           SizedBox(height: 8),
@@ -175,14 +190,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    color: Colors.blue[50], // Lighter blue background
+                    color: Colors.lime[50], // Lighter lime background
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
                           Text(
                             'Your Classes',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.limeAccent.shade400),
                           ),
                           SizedBox(height: 20),
                           if (_isLoading)
@@ -214,7 +229,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(15),
                                     ),
-                                    color: Colors.blue[100], // Lighter blue background
+                                    color: Colors.lime[100], // Lighter lime background
                                     child: ListTile(
                                       contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
                                       title: Text(
@@ -242,14 +257,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    color: Colors.blue[50],
+                    color: Colors.lime[50],
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
                           Text(
                             'Your Classes\' History',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.limeAccent.shade400),
                           ),
                           SizedBox(height: 20),
                           ElevatedButton(
@@ -261,7 +276,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             },
                             child: Text('View History', style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
+                              backgroundColor: Colors.limeAccent.shade400,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
@@ -282,7 +297,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    color: Colors.blue[50], // Lighter blue background
+                    color: Colors.lime[50], // Lighter lime background
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -293,7 +308,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blueAccent,
+                              color: Colors.limeAccent.shade400,
                             ),
                           ),
                           SizedBox(height: 20),
@@ -306,17 +321,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             ),
                           ),
                           SizedBox(height: 20),
-                          if (_errorMessage.isNotEmpty)
-                            Text(
-                              _errorMessage,
-                              style: TextStyle(color: Colors.red, fontSize: 16),
-                            ),
                           SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: _createNewClass,
                             child: Text('Create', style: TextStyle(color: Colors.white),),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
+                              backgroundColor: Colors.limeAccent.shade400,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30.0),
                               ),
@@ -346,7 +356,6 @@ class ClassPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Class $classId'),
-        backgroundColor: Colors.blueAccent,
       ),
       body: Center(
         child: Text('Details of class $classId will be here'),

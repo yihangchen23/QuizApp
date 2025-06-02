@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:quiz_app/main.dart';
 
 class QuizModulePage extends StatefulWidget {
   final String studentId;
@@ -21,7 +22,6 @@ class QuizModulePage extends StatefulWidget {
 
 class _QuizModulePageState extends State<QuizModulePage> {
   bool _isLoading = true;
-  String _errorMessage = '';
   List<dynamic> _questions = [];
   Map<String, TextEditingController> _answerControllers = {};
   bool _submitting = false;
@@ -36,7 +36,6 @@ class _QuizModulePageState extends State<QuizModulePage> {
   Future<void> _fetchQuizQuestions() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
     });
     try {
       final questionsRes = await Supabase.instance.client
@@ -54,7 +53,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load quiz questions.';
+        QuizApp.errorSnackBar(context, 'Failed to load quiz questions.');
         _isLoading = false;
       });
     }
@@ -63,7 +62,6 @@ class _QuizModulePageState extends State<QuizModulePage> {
   Future<void> _submitQuiz() async {
     setState(() {
       _submitting = true;
-      _errorMessage = '';
     });
 
     // 1. Create quiz_attempt
@@ -78,7 +76,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
 
     if (attemptRes == null || attemptRes['id'] == null) {
       setState(() {
-        _errorMessage = 'Failed to create quiz attempt.';
+        QuizApp.errorSnackBar(context, 'Failed to submit quiz.');
         _submitting = false;
       });
       return;
@@ -94,7 +92,6 @@ class _QuizModulePageState extends State<QuizModulePage> {
       final aiResult = await _gradeWithAI(
         question: q['question_text'],
         expected: q['expected_answer'],
-        points: q['points'],
         studentResponse: studentResponse,
       );
 
@@ -124,7 +121,6 @@ class _QuizModulePageState extends State<QuizModulePage> {
   Future<Map<String, dynamic>> _gradeWithAI({
     required String question,
     required String expected,
-    required int points,
     required String studentResponse,
   }) async {
     final url = Uri.parse('https://openrouter.ai/api/v1/chat/completions');
@@ -135,7 +131,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
       'X-Title': '<YOUR_SITE_NAME>',
     };
     final prompt =
-        'Please format your answer in one line in the format of ["your feedback for the student answer","your rating of the students answer between 0(Wrong Answer)-$points(Right Answer with proper explanation"].... Question is "$question"... Expected Answer is "$expected"... Student Response is "$studentResponse"';
+        'Please format your answer in one line in the format of ["your feedback for the student answer","your rating of the students answer between 0(Wrong Answer)-10(Right Answer with proper explanation"].... Question is "$question"... Expected Answer is "$expected"... Student Response is "$studentResponse"';
 
     try {
       final body = jsonEncode({
@@ -172,7 +168,8 @@ class _QuizModulePageState extends State<QuizModulePage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Quiz Submitted!'),
+        backgroundColor: Colors.lime[50],
+        title: Text('Quiz Submitted!', style: TextStyle(fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: 350,
           child: ListView.builder(
@@ -182,15 +179,15 @@ class _QuizModulePageState extends State<QuizModulePage> {
               final q = _questions[idx];
               final ai = _aiResults[q['id']];
               return Card(
-                color: Colors.blue[50],
+                color: Colors.white,
                 child: ListTile(
                   title: Text(q['question_text']),
                   subtitle: ai == null
                       ? Text('Not answered.')
                       : Text(
-                          'AI Score: ${ai['score']}/${q['points']}\nFeedback: ${ai['feedback']}',
+                          'AI Score: ${ai['score']}/10\nFeedback: ${ai['feedback']}',
                           style: TextStyle(
-                            color: (ai['score']/q['points']) >= 0.7 ? Colors.green : Colors.red,
+                            color: (ai['score']) >= 7 ? Colors.lightGreen : Colors.red,
                           ),
                         ),
                 ),
@@ -200,7 +197,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
         ),
         actions: [
           TextButton(
-            child: Text('Close', style: TextStyle(color: Colors.blue)),
+            child: Text('Close', style: TextStyle(color: Colors.black)),
             onPressed: () {
               Navigator.of(context).pop(); //pop to quiz_module
               Navigator.of(context).pop('completed'); //pop to student_class
@@ -222,114 +219,88 @@ class _QuizModulePageState extends State<QuizModulePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.quizTitle),
-        backgroundColor: Colors.blue.shade700,
-      ),
+      appBar: AppBar(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-              ? Center(
+          : Center(
+            child: SingleChildScrollView(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 600),
+                child: Card(
+                  color: Colors.lightGreen,
+                  elevation: 8,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      _errorMessage,
-                      style: TextStyle(color: Colors.red.shade700, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              : Center(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      constraints: BoxConstraints(maxWidth: 600),
-                      child: Card(
-                        elevation: 8,
-                        margin: EdgeInsets.symmetric(vertical: 24),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                    padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${widget.quizTitle}',
+                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 30),
                         ),
-                        color: Colors.blue[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(22.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Quiz: ${widget.quizTitle}',
-                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                      color: Colors.blue.shade900,
-                                      fontWeight: FontWeight.bold,
+                        SizedBox(height: 18),
+                        ..._questions.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final q = entry.value;
+                          return Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Q${idx + 1}: ${q['question_text']}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                      color: Colors.lime.shade900,
                                     ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  TextField(
+                                    controller: _answerControllers[q['id']],
+                                    decoration: InputDecoration(
+                                      labelText: 'Your Answer',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      prefixIcon: Icon(Icons.edit, color: Colors.lime.shade700),
+                                    ),
+                                    maxLines: 3,
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 18),
-                              ..._questions.asMap().entries.map((entry) {
-                                final idx = entry.key;
-                                final q = entry.value;
-                                return Card(
-                                  elevation: 2,
-                                  margin: EdgeInsets.symmetric(vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Q${idx + 1}: ${q['question_text']}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                            color: Colors.blue.shade800,
-                                          ),
-                                        ),
-                                        SizedBox(height: 10),
-                                        TextField(
-                                          controller: _answerControllers[q['id']],
-                                          decoration: InputDecoration(
-                                            labelText: 'Your Answer',
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            prefixIcon: Icon(Icons.edit, color: Colors.blue.shade700),
-                                          ),
-                                          maxLines: 3,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }),
-                              SizedBox(height: 20),
-                              Center(
-                                child: ElevatedButton.icon(
-                                  onPressed: _submitting ? null : _submitQuiz,
-                                  icon: _submitting
-                                      ? SizedBox(
-                                          height: 18,
-                                          width: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                        )
-                                      : Icon(Icons.send),
-                                  label: Text(_submitting ? 'Submitting...' : 'Submit Quiz'),
-                                  style: ElevatedButton.styleFrom(
-                                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                    backgroundColor: Colors.blue.shade700,
-                                  ),
-                                ),
+                            ),
+                          );
+                        }),
+                        SizedBox(height: 20),
+                        Center(
+                          child: ElevatedButton.icon(
+                            onPressed: _submitting ? null : _submitQuiz,
+                            icon: _submitting
+                                ? SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : Icon(Icons.send, color: Colors.lime.shade900),
+                            label: Text(_submitting ? 'Submitting...' : 'Submit Quiz', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.lime.shade900),),
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
                               ),
-                            ],
+                              backgroundColor: Colors.lime.shade500,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
+              ),
+            ),
+          ),
     );
   }
 }

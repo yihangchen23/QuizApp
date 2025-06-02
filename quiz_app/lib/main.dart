@@ -24,17 +24,54 @@ class QuizApp extends StatelessWidget {
       title: 'AI Quiz App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.blue,
+        primaryColor: Colors.lightGreen,
+        scaffoldBackgroundColor: Colors.lightGreen.shade700,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.lightGreen.shade900,
+          elevation: 8,
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: ButtonStyle(
+            iconColor: MaterialStateProperty.all(Colors.lightGreen),
+          ),
+        ),
+        iconTheme: IconThemeData(
+          color: Colors.lightGreen,
+        ),
+        cardTheme: CardTheme(
+          elevation: 0,
+          margin: EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          color: Colors.limeAccent[100],
+        ),
         inputDecorationTheme: InputDecorationTheme(
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blue, width: 2.0),
+            borderSide: BorderSide(color: Colors.lightGreen.shade800, width: 2.0),
           ),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey.shade400, width: 1.0),
+            borderSide: BorderSide(color: Colors.lightGreen.shade600, width: 1.0),
           ),
         ),
       ),
       home: LoginScreen(),
+    );
+  }
+
+  static void errorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error, color: Colors.white),
+            SizedBox(width: 16),
+            Text(message, style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+      ),
     );
   }
 }
