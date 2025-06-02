@@ -168,8 +168,8 @@ class _QuizModulePageState extends State<QuizModulePage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: Colors.lime[50],
-        title: Text('Quiz Submitted!', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        title: Text('Quiz Submitted!', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.lightGreen.shade800)),
         content: SizedBox(
           width: 350,
           child: ListView.builder(
@@ -197,7 +197,7 @@ class _QuizModulePageState extends State<QuizModulePage> {
         ),
         actions: [
           TextButton(
-            child: Text('Close', style: TextStyle(color: Colors.black)),
+            child: Text('Close', style: TextStyle(color: Colors.lightGreen)),
             onPressed: () {
               Navigator.of(context).pop(); //pop to quiz_module
               Navigator.of(context).pop('completed'); //pop to student_class

@@ -26,6 +26,7 @@ class _StudentClassPageState extends State<StudentClassPage> {
   bool _isLoading = true;
   List<dynamic> _quizzes = [];
   String _search = '';
+  String _filterStatus = 'all'; // all, open, closed  String _filterStatus = 'all'; // all, open, closed
 
   @override
   void initState() {
@@ -61,9 +62,8 @@ class _StudentClassPageState extends State<StudentClassPage> {
   Future<List<dynamic>> _filterAvailableQuizzes(List quizzesRes) async {
     List<dynamic> filtered = [];
     for (var q in quizzesRes) {
-      bool open = (q['quiz_open'] == true);
       bool taken = await _hasStudentTakenQuiz(q['quiz_id']);
-      if (open && !taken)
+      if (!taken)
         filtered.add(q);
     }
     return filtered;
@@ -71,7 +71,10 @@ class _StudentClassPageState extends State<StudentClassPage> {
 
   List<dynamic> get _filteredQuizzes {
     var filtered = _quizzes;
-    filtered = filtered.where((q) => q['quiz_open'] == true).toList();
+    if (_filterStatus == 'open')
+      filtered = filtered.where((q) => q['quiz_open'] == true).toList();
+    else if (_filterStatus == 'closed')
+      filtered = filtered.where((q) => q['quiz_open'] == false).toList();
     if (_search.isNotEmpty) {
       filtered = filtered
           .where((q) =>
@@ -117,7 +120,7 @@ Widget _buildQuizList() {
   }
   return Column(
     children: _filteredQuizzes.map((quiz) {
-      final isOpen = quiz['quiz_open'] == true;
+      final isOpen = quiz['quiz_open'];
       return Card(
         margin: EdgeInsets.symmetric(vertical: 8),
         elevation: 3,
@@ -141,11 +144,11 @@ Widget _buildQuizList() {
                   padding: const EdgeInsets.only(top: 2.0, bottom: 2.0),
                   child: Text(
                     quiz['quiz_description'],
-                    style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+                    style: TextStyle(fontSize: 14, color: Colors.lightGreen),
                   ),
                 ),
               Text(
-                '${quiz['quiz_closes_at'] != null?
+                '${((quiz['quiz_closes_at'] ?? '').trim() != '')?
                   'Due ${DateFormat.yMMMMd().add_jm().format(DateTime.parse(quiz['quiz_closes_at']).toLocal())}'
                   : 'No due date'}',
                 style: TextStyle(color: Colors.lightGreen),
@@ -160,18 +163,20 @@ Widget _buildQuizList() {
             ],
           ),
           onTap: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => QuizModulePage(
-                  studentId: widget.studentId,
-                  quizId: quiz['quiz_id'],
-                  quizTitle: quiz['quiz_title'],
+            if (isOpen) {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => QuizModulePage(
+                    studentId: widget.studentId,
+                    quizId: quiz['quiz_id'],
+                    quizTitle: quiz['quiz_title'],
+                  ),
                 ),
-              ),
-            );
-            if (result == 'completed')
-              _fetchStudentQuizzes();
+              );
+              if (result == 'completed')
+                _fetchStudentQuizzes();
+            }
           },
         ),
       );
@@ -185,21 +190,39 @@ Widget _buildQuizList() {
       child: Flexible(
         child: SizedBox(
           width: 220,
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Search for a quiz',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+          child: Column(
+            children: [
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search for a quiz',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                  isDense: true,
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    _search = val;
+                  });
+                },
               ),
-              contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-              isDense: true,
-            ),
-            onChanged: (val) {
-              setState(() {
-                _search = val;
-              });
-            },
+              DropdownButton<String>(
+                value: _filterStatus,
+                borderRadius: BorderRadius.circular(12),
+                items: [
+                  DropdownMenuItem(value: 'all', child: Text('All')),
+                  DropdownMenuItem(value: 'open', child: Text('Open')),
+                  DropdownMenuItem(value: 'closed', child: Text('Closed')),
+                ],
+                onChanged: (val) {
+                  setState(() {
+                    _filterStatus = val ?? 'all';
+                  });
+                },
+              ),
+            ],
           ),
         ),
       ),

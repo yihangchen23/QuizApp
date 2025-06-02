@@ -255,10 +255,13 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Score updated successfully')),
       );
+      //Navigator.of(context).pop();
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update score: $e')),
       );
+      //Navigator.of(context).pop();
     }
   }
 
@@ -379,6 +382,8 @@ class _TeacherHistoryPageState extends State<TeacherHistoryPage> {
             child: Text('Save'),
             onPressed: () {
               final score = double.tryParse(scoreController.text);
+              print('${
+                  feedbackController}');
               if (score != null && score >= 0 && score <= 10) {
                 _updateAnswerScore(
                   answer['id'],

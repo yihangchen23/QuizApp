@@ -77,16 +77,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           'teacher_id': widget.teacherId,
         }
       ]);
-
-      if (response.error == null) {
-        setState(() {
-          _fetchClasses();
-        });
-      } else {
-        setState(() {
-          QuizApp.errorSnackBar(context, 'Failed to create class.');
-        });
-      }
+      setState(() {
+        _classNameController.clear();
+        _fetchClasses();
+      });
     } catch (e) {
       setState(() {
         QuizApp.errorSnackBar(context, 'An error occurred. Please try again.');
@@ -108,6 +102,51 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
+
+  void _classCreationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Create a New Class',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.lightGreen.shade800,
+            ),
+          ),
+          content: Form(
+            child: TextField(
+              controller: _classNameController,
+              decoration: InputDecoration(
+                labelText: 'Class Name',
+                prefixIcon: Icon(Icons.class_),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel', style: TextStyle(color: Colors.lightGreen.shade700)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            ElevatedButton(
+              child: Text('Create', style: TextStyle(color: Colors.lightGreen.shade900)),
+              onPressed: () {
+               _createNewClass();
+               Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightGreen,
+              ),
+            ),
+            
+          ],
+        );
+      }
     );
   }
 
@@ -145,199 +184,145 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Teacher Header
-                Container(
-                  constraints: BoxConstraints(maxWidth: 600), // Constrained width
-                  child: Card(
-                    elevation: 8,
-                    margin: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    color: Colors.lime[50], // Lighter lime background
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Welcome, ${widget.teacherName}',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.limeAccent.shade400,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'You can manage your classes below.',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ],
+            child: Card(
+              color: Colors.lightGreen,
+              elevation: 8,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundColor: Colors.deepOrange.shade800,
+                      child: Text(
+                        widget.teacherName.substring(0, 1).toUpperCase(),
+                        style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ),
-                ),
-
-                // Class List Section
-                Container(
-                  constraints: BoxConstraints(maxWidth: 600), // Constrained width
-                  child: Card(
-                    elevation: 8,
-                    margin: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                    SizedBox(height: 10),
+                    Text(
+                      widget.teacherName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        color: Colors.lightGreen.shade900,
+                      ),
                     ),
-                    color: Colors.lime[50], // Lighter lime background
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Your Classes',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.limeAccent.shade400),
-                          ),
-                          SizedBox(height: 20),
-                          if (_isLoading)
-                            Center(child: CircularProgressIndicator())
-                          else if (_errorMessage.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Text(
-                                _errorMessage,
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.bold,
+                    SizedBox(height: 16),
+                    Text(
+                      'Teacher Dashboard',
+                      style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 32),
+
+                    // Class List Section
+                    
+                    Container(
+                      constraints: BoxConstraints(maxWidth: 600), // Constrained width
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Stack(
+                            children: [
+                              Column(
+                              children: [
+                                Text(
+                                  'Your Classes',
+                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
                                 ),
-                              ),
-                            ),
-                          // Display the list of classes
-                          if (_classes.isNotEmpty)
-                            ListView.builder(
-                              shrinkWrap: true, // Allow ListView to shrink to fit its children
-                              itemCount: _classes.length,
-                              itemBuilder: (context, index) {
-                                final classItem = _classes[index];
-                                return GestureDetector(
-                                  onTap: () => _goToClassPage(classItem['id'], widget.teacherId),
-                                  child: Card(
-                                    elevation: 8,
-                                    margin: EdgeInsets.symmetric(vertical: 8),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    color: Colors.lime[100], // Lighter lime background
-                                    child: ListTile(
-                                      contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                                      title: Text(
-                                        classItem['name'],
-                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                                SizedBox(height: 20),
+                                if (_isLoading)
+                                  Center(child: CircularProgressIndicator())
+                                else if (_errorMessage.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Text(
+                                      _errorMessage,
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      trailing: Icon(Icons.arrow_forward, color: Colors.black),
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                //History
-                Container(
-                  constraints: BoxConstraints(maxWidth: 600),
-                  child: Card(
-                    elevation: 8,
-                    margin: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    color: Colors.lime[50],
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Your Classes\' History',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.limeAccent.shade400),
-                          ),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => TeacherHistoryPage(teacherId: widget.teacherId, teacherName: widget.teacherName)),
-                              );
-                            },
-                            child: Text('View History', style: TextStyle(color: Colors.white)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.limeAccent.shade400,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                                // Display the list of classes
+                                if (_classes.isNotEmpty)
+                                  ListView.builder(
+                                    shrinkWrap: true, // Allow ListView to shrink to fit its children
+                                    itemCount: _classes.length,
+                                    itemBuilder: (context, index) {
+                                      final classItem = _classes[index];
+                                      return GestureDetector(
+                                        onTap: () => _goToClassPage(classItem['id'], widget.teacherId),
+                                        child: Card(
+                                          margin: EdgeInsets.symmetric(vertical: 8),
+                                          color: Colors.white,
+                                          elevation: 8,
+                                          child: ListTile(
+                                            contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                                            title: Text(
+                                              classItem['name'],
+                                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.lightGreen.shade800),
+                                            ),
+                                            trailing: Icon(Icons.arrow_forward, color: Colors.lightGreen.shade800),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Class Creation Card
-                Container(
-                  constraints: BoxConstraints(maxWidth: 600), // Constrained width
-                  child: Card(
-                    elevation: 8,
-                    margin: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    color: Colors.lime[50], // Lighter lime background
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Create New Class',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.limeAccent.shade400,
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          TextField(
-                            controller: _classNameController,
-                            decoration: InputDecoration(
-                              labelText: 'Class Name',
-                              labelStyle: TextStyle(color: Colors.black),
-                              prefixIcon: Icon(Icons.class_, color: Colors.black),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: _createNewClass,
-                            child: Text('Create', style: TextStyle(color: Colors.white),),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.limeAccent.shade400,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.0),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: IconButton(
+                                  icon: Icon(Icons.add),
+                                  onPressed: () => _classCreationDialog(context),
+                                  tooltip: 'Create a new class',
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    //History
+                    Container(
+                      constraints: BoxConstraints(maxWidth: 600),
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Your Classes\' History',
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
+                              ),
+                              SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => TeacherHistoryPage(teacherId: widget.teacherId, teacherName: widget.teacherName)),
+                                  );
+                                },
+                                child: Text('View History', style: TextStyle(color: Colors.lime.shade900, fontSize: 16, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.lime,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quiz_app/main.dart';
+import 'package:intl/intl.dart';
 
 class TeacherClassPage extends StatefulWidget {
   final String classId;
@@ -217,38 +218,30 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
   }
 
   Widget _buildEnrollmentCode() {
-    return Card(
-      elevation: 1.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.only(bottom: 20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: SelectableText(
-                'Class Code: ${widget.classId}',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.lime.shade700),
-              ),
-            ),
-            IconButton(
-              icon: Icon(Icons.copy, color: Colors.lime.shade700),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: widget.classId));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Class code copied!'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-            ),
-          ],
+    return Row(
+      children: [
+        Expanded(
+          child: SelectableText(
+            'Class Code: ${widget.classId}',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.lime.shade900),
+          ),
         ),
-      ),
+        IconButton(
+          icon: Icon(Icons.copy, color: Colors.lime.shade900),
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: widget.classId));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Class code copied!'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -264,23 +257,25 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
     return Column(
       children: _students.map((student) {
         return Card(
-          elevation: 2,
-          margin: EdgeInsets.symmetric(vertical: 6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 8,
+          color: Colors.white,
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.lime.shade700,
+              backgroundColor: Colors.deepOrange.shade800,
               child: Text(
                 (student['student_name'] as String).substring(0, 1).toUpperCase(),
                 style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
             title: Text(
               student['student_name'],
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.lightGreen.shade800),
             ),
-            subtitle: Text('ID: ${student['student_id']}'),
+            subtitle: Text(
+              'ID: ${student['student_id']}',
+              style: TextStyle(color: Colors.lightGreen)
+            ),
             trailing: IconButton(
               icon: Icon(Icons.remove_circle, color: Colors.redAccent, size: 28),
               tooltip: 'Remove from class',
@@ -316,31 +311,35 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
     return Column(
       children: _quizzes.map((quiz) {
         return Card(
-          margin: EdgeInsets.symmetric(vertical: 8),
-          elevation: 3,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          color: Colors.white,
+          elevation: 8,
           child: ExpansionTile(
             title: Text(
               quiz['title'] ?? 'Untitled Quiz',
               style:
-                  TextStyle(fontWeight: FontWeight.bold, color: Colors.lime.shade900),
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.lightGreen.shade800),
             ),
-            subtitle: Text(quiz['description'] ?? ''),
+            subtitle: Text(quiz['description'] ?? 'No Description', style: TextStyle(color: Colors.lightGreen)),
             children: [
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: Text(
-                  'Scheduled At: ${quiz['scheduled_at'] ?? 'Not scheduled'}\n'
-                  'Closes At: ${quiz['closes_at'] ?? 'No closing date'}\n'
-                  'Status: ${quiz['is_open'] == true ? 'Open' : 'Closed'}',
-                  style: TextStyle(color: Colors.grey.shade700),
+                child: Column(
+                  children: [
+                    Text(
+                      '${(quiz['closes_at'] != null && quiz['closes_at'].trim() != '')?
+                        'Due ${DateFormat.yMMMMd().add_jm().format(DateTime.parse(quiz['closes_at']).toLocal())}'
+                        :'No due date'}\n'
+                      'Status: ${quiz['is_open'] == true ? 'Open' : 'Closed'}',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () => _showQuizQuestions(quiz['id']),
+                      icon: Icon(Icons.question_answer, color: Colors.lime.shade700),
+                      label: Text('View Questions', style: TextStyle(color: Colors.lime.shade700)),
+                    ),
+                  ],
                 ),
-              ),
-              TextButton.icon(
-                onPressed: () => _showQuizQuestions(quiz['id']),
-                icon: Icon(Icons.question_answer, color: Colors.lime.shade700),
-                label: Text('View Questions'),
               ),
             ],
           ),
@@ -376,11 +375,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                 final q = questions[index];
                 return ListTile(
                   title: Text(q['question_text']),
-                  subtitle: Text(
-                    'Expected Answer: ${q['expected_answer']}\n'
-                    'Keywords: ${q['expected_keywords'] ?? 'None'}\n'
-                    'Points: ${q['points'] ?? 1}',
-                  ),
+                  subtitle:Text('${q['expected_answer'].trim() != ''?'Expected Answer: ${q['expected_answer']}':''}'),
                 );
               },
             ),
@@ -452,74 +447,117 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
     );
   }
 
-  Widget _buildCreateQuizAndQuestionsSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      margin: EdgeInsets.symmetric(vertical: 24),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Create New Quiz',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.lime.shade900,
+  void _showQuizCreationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Create a New Quiz',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.lightGreen.shade800,
+            ),
+          ),
+          content: Column(
+            children: [
+              Card(
+                elevation: 8,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      // Quiz title
+                      TextField(
+                        controller: _quizTitleController,
+                        decoration: InputDecoration(
+                          labelText: 'Quiz Title',
+                          border:
+                              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: Icon(Icons.title, color: Colors.lime.shade700),
+                        ),
+                      ),
+                      SizedBox(height: 14),
+
+                      // Quiz description
+                      TextField(
+                        controller: _quizDescController,
+                        decoration: InputDecoration(
+                          labelText: 'Quiz Description (optional)',
+                          border:
+                              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: Icon(Icons.description, color: Colors.lime.shade700),
+                        ),
+                        maxLines: 2,
+                      ),
+                      SizedBox(height: 14),
+
+                      // Close datetime
+                      TextField(
+                        controller: _quizCloseController,
+                        decoration: InputDecoration(
+                          labelText: 'Due Date (optional)',
+                          border:
+                              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: Icon(Icons.timer_off, color: Colors.orange.shade700),
+                          hintText: 'YYYY-MM-DDTHH:mm:ss',
+                        ),
+                      ),
+                      SizedBox(height: 14),
+
+                      // Is open switch
+                      SwitchListTile.adaptive(
+                        title: Text('Is Quiz Open?'),
+                        value: _isQuizOpen,
+                        onChanged: (val) {
+                          setState(() {
+                            _isQuizOpen = val;
+                          });
+                        },
+                        activeColor: Colors.lime.shade600,
+                      ),
+                    ],
                   ),
-            ),
-            SizedBox(height: 18),
-
-            // Quiz title
-            TextField(
-              controller: _quizTitleController,
-              decoration: InputDecoration(
-                labelText: 'Quiz Title',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: Icon(Icons.title, color: Colors.lime.shade700),
+                ),
               ),
-            ),
-            SizedBox(height: 14),
+              SizedBox(height: 24),
+              Card(
+                elevation: 8,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
 
-            // Quiz description
-            TextField(
-              controller: _quizDescController,
-              decoration: InputDecoration(
-                labelText: 'Quiz Description (optional)',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: Icon(Icons.description, color: Colors.lime.shade700),
+                    ],
+                  ),
+                ),
               ),
-              maxLines: 2,
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel', style: TextStyle(color: Colors.lightGreen.shade700)),
+              onPressed: () => Navigator.of(context).pop(),
             ),
-            SizedBox(height: 14),
-
-            // Close datetime
-            TextField(
-              controller: _quizCloseController,
-              decoration: InputDecoration(
-                labelText: 'Due Date (optional)',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: Icon(Icons.timer_off, color: Colors.orange.shade700),
-                hintText: 'YYYY-MM-DDTHH:mm:ss',
-              ),
-            ),
-            SizedBox(height: 14),
-
-            // Is open switch
-            SwitchListTile.adaptive(
-              title: Text('Is Quiz Open?'),
-              value: _isQuizOpen,
-              onChanged: (val) {
-                setState(() {
-                  _isQuizOpen = val;
-                });
+            ElevatedButton(
+              child: Text('Create', style: TextStyle(color: Colors.lightGreen.shade900)),
+              onPressed: () {
+               //_createNewClass();
+               Navigator.of(context).pop();
               },
-              activeColor: Colors.lime.shade600,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightGreen,
+              ),
             ),
+          ],
+        );
+      }
+    );
+  }
+
+  /*Widget _buildCreateQuizAndQuestionsSection() {
 
             Divider(height: 30, thickness: 1.2),
 
@@ -579,7 +617,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
         ),
       ),
     );
-  }
+  }*/
 
   @override
   void dispose() {
@@ -596,94 +634,83 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_classInfo != null ? 'Class: ${_classInfo!['name']}' : 'Loading...'),
-      ),
+      appBar: AppBar(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Center(
               child: SingleChildScrollView(
                 physics: AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Enrollment Code Card
-                    Container(
-                      constraints: BoxConstraints(maxWidth: 600),
-                      child: Card(
-                        elevation: 8,
-                        margin: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                 child: Card(
+                  color: Colors.lightGreen,
+                  elevation: 8,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${_classInfo!['name']}',
+                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 30),
                         ),
-                        color: Colors.lime[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: _buildEnrollmentCode(),
-                        ),
-                      ),
-                    ),
-                    // Students Card
-                    Container(
-                      constraints: BoxConstraints(maxWidth: 600),
-                      child: Card(
-                        elevation: 8,
-                        margin: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        color: Colors.lime[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _sectionTitle('Students'),
-                              _buildStudentList(),
-                            ],
+                        SizedBox(height: 24),
+                        // Enrollment Code Card
+                        Container(
+                          constraints: BoxConstraints(maxWidth: 600),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: _buildEnrollmentCode(),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    // Quizzes Card
-                    Container(
-                      constraints: BoxConstraints(maxWidth: 600),
-                      child: Card(
-                        elevation: 8,
-                        margin: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        color: Colors.lime[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _sectionTitle('Quizzes'),
-                              _buildQuizList(),
-                            ],
+                        // Students Card
+                        Container(
+                          constraints: BoxConstraints(maxWidth: 600),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _sectionTitle('Students'),
+                                  _buildStudentList(),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    // Create Quiz Card
-                    Container(
-                      constraints: BoxConstraints(maxWidth: 600),
-                      child: Card(
-                        elevation: 8,
-                        margin: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                        // Quizzes Card
+                        Container(
+                          constraints: BoxConstraints(maxWidth: 600),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Stack(
+                                children: [
+                                   Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _sectionTitle('Quizzes'),
+                                      _buildQuizList(),
+                                    ],
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: IconButton(
+                                      icon: Icon(Icons.add),
+                                      onPressed: () => _showQuizCreationDialog(context),
+                                      tooltip: 'Create a new quiz',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        color: Colors.lime[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: _buildCreateQuizAndQuestionsSection(),
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

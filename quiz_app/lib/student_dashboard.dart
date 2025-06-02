@@ -59,12 +59,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: Text(
             'Enter a class ID to enroll',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.limeAccent.shade400,
+              color: Colors.lightGreen.shade800,
             ),
           ),
           content: Form(
@@ -78,15 +79,18 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: Text('Cancel', style: TextStyle(color: Colors.lightGreen.shade700)),
               onPressed: () => Navigator.of(context).pop(),
             ),
             ElevatedButton(
-              child: Text('Enroll'),
+              child: Text('Enroll', style: TextStyle(color: Colors.lightGreen.shade900)),
               onPressed: () {
-               _enrollInClass(context);
-               Navigator.of(context).pop();
+                _enrollInClass(context);
+                Navigator.of(context).pop();
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightGreen,
+              ),
             ),
           ],
         );
@@ -108,8 +112,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       await Supabase.instance.client.from('enrollments').insert([
         {'student_id': widget.studentId, 'class_id': classId}
       ]);
-      _enrollClassIdController.clear();
-      _fetchClasses(context);
+      setState() {
+        _enrollClassIdController.clear();
+        _fetchClasses(context);
+      }
     } catch (e) {
       setState(() {
         QuizApp.errorSnackBar(context, 'Failed to enroll. Ensure class ID is valid.');
@@ -197,42 +203,42 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         child: Stack(
                           children: [
                             Column(
-                            children: [
-                              Text(
-                                'Classes',
-                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
-                              ),
-                              SizedBox(height: 20),
-                              if (_isLoading)
-                                CircularProgressIndicator()
-                              else if (_classes.isEmpty)
-                                Text('You are not enrolled in any classes yet.'),
-                              if (_classes.isNotEmpty)
-                                ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
-                                  itemCount: _classes.length,
-                                  itemBuilder: (context, index) {
-                                    final classItem = _classes[index];
-                                    return Card(
-                                      margin: EdgeInsets.symmetric(vertical: 8),
-                                      color: Colors.white,
-                                      elevation: 8,
-                                      child: ListTile(
-                                        contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                                        title: Text(classItem['class_name'], style: TextStyle(fontSize: 18, color: Colors.lightGreen.shade800, fontWeight: FontWeight.bold)),
-                                        subtitle: Text('Teacher: ${classItem['teacher_name']}', style: TextStyle(color: Colors.lightGreen)),
-                                        onTap: () { 
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => StudentClassPage(studentId: widget.studentId, studentName: widget.studentName, classId: classItem['class_id'], className: classItem['class_name']))
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
+                              children: [
+                                Text(
+                                  'Classes',
+                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
                                 ),
-                              ],
+                                SizedBox(height: 20),
+                                if (_isLoading)
+                                  CircularProgressIndicator()
+                                else if (_classes.isEmpty)
+                                  Text('You are not enrolled in any classes yet.'),
+                                if (_classes.isNotEmpty)
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    itemCount: _classes.length,
+                                    itemBuilder: (context, index) {
+                                      final classItem = _classes[index];
+                                      return Card(
+                                        margin: EdgeInsets.symmetric(vertical: 8),
+                                        color: Colors.white,
+                                        elevation: 8,
+                                        child: ListTile(
+                                          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                                          title: Text(classItem['class_name'], style: TextStyle(fontSize: 18, color: Colors.lightGreen.shade800, fontWeight: FontWeight.bold)),
+                                          subtitle: Text('Teacher: ${classItem['teacher_name']}', style: TextStyle(color: Colors.lightGreen)),
+                                          onTap: () { 
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => StudentClassPage(studentId: widget.studentId, studentName: widget.studentName, classId: classItem['class_id'], className: classItem['class_name']))
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
                             ),
                             Positioned(
                               top: 0,
@@ -241,8 +247,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                 icon: Icon(Icons.add),
                                 onPressed: () => _enrollmentDialog(context),
                                 tooltip: 'Add a Class',
-                              )
-                            )
+                              ),
+                            ),
                           ],
                         ),
                       ),
