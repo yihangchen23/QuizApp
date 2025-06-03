@@ -123,9 +123,9 @@ Widget _buildQuizList() {
       final isOpen = quiz['quiz_open'];
       return Card(
         margin: EdgeInsets.symmetric(vertical: 8),
-        elevation: 3,
+        elevation: isOpen? 8:0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: isOpen ? Colors.lime[50] : Colors.grey[100],
+        color: isOpen ? Colors.white : Colors.grey.shade300,
         child: ListTile(
           leading: Icon(
             isOpen ? Icons.lock_open : Icons.lock_outline,
@@ -139,14 +139,11 @@ Widget _buildQuizList() {
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if ((quiz['quiz_description'] ?? '').toString().isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2.0, bottom: 2.0),
-                  child: Text(
-                    quiz['quiz_description'],
-                    style: TextStyle(fontSize: 14, color: Colors.lightGreen),
-                  ),
-                ),
+              Text(
+                '${((quiz['quiz_description'] ?? '').trim() != '')?
+                  quiz['quiz_description']:'No description'}',
+                style: TextStyle(fontSize: 14, color: Colors.lightGreen),
+              ),
               Text(
                 '${((quiz['quiz_closes_at'] ?? '').trim() != '')?
                   'Due ${DateFormat.yMMMMd().add_jm().format(DateTime.parse(quiz['quiz_closes_at']).toLocal())}'
@@ -207,6 +204,9 @@ Widget _buildQuizList() {
                     _search = val;
                   });
                 },
+              ),
+              SizedBox (
+                height: 16,
               ),
               DropdownButton<String>(
                 value: _filterStatus,

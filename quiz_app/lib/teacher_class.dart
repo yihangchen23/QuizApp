@@ -23,6 +23,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
   Map<String, dynamic>? _classInfo;
   List<dynamic> _students = [];
   List<dynamic> _quizzes = [];
+  Map<String, bool> _isQuizOpenInList = {};
 
   // --- Quiz Creation Controllers ---
   final _quizTitleController = TextEditingController();
@@ -77,21 +78,6 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
         _isLoading = false;
       });
     }
-  }
-
-  // --- Add question to the quiz being created (locally) ---
-  void _addNewQuestion() {
-    setState(() {
-      _newQuestions.add(_QuizQuestion());
-    });
-  }
-
-  void _removeNewQuestion(int index) {
-    setState(() {
-      if (index >= 0 && index < _newQuestions.length) {
-        _newQuestions.removeAt(index);
-      }
-    });
   }
 
   // --- Validate the quiz + questions form ---
@@ -175,13 +161,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
 
       await Supabase.instance.client.from('questions').insert(questionsData);
 
-      // Reset form & refresh data
-      _quizTitleController.clear();
-      _quizDescController.clear();
-      _quizCloseController.clear();
-      _quizScheduleController.clear();
-      _isQuizOpen = false;
-      _newQuestions.clear();
+      _clearQuizForm();
 
       await _fetchAll();
 
@@ -201,19 +181,30 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
     }
   }
 
+  void _clearQuizForm() {
+    _quizTitleController.clear();
+    _quizDescController.clear();
+    _quizCloseController.clear();
+    _quizScheduleController.clear();
+    _isQuizOpen = false;
+    _newQuestions.clear();
+  }
+
   // --- Other UI building helpers from previous version (slightly trimmed for brevity) ---
 
   Widget _sectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14.0),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.lime.shade900,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.6,
-            ),
-      ),
+    return Column(
+      children: [
+        Text(
+          text,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Colors.lime.shade900,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+              ),
+        ),
+        SizedBox(height: 14),
+      ],
     );
   }
 
@@ -250,7 +241,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
       return Center(
         child: Text(
           'No students enrolled in this class.',
-          style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+          style: TextStyle(color: Colors.lime.shade700, fontSize: 16),
         ),
       );
     }
@@ -282,9 +273,9 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
               onPressed: () async {
                 try {
                   await Supabase.instance.client
-                      .from('student_class_enrollments')
+                      .from('enrollments')
                       .delete()
-                      .eq('id', student['enrollment_id']);
+                      .eq('student_id', student['student_id']);
                   await _fetchAll();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Student removed from class.')),
@@ -301,15 +292,35 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
     );
   }
 
+  Future<void> _updateQuizStatus(String quizId, bool open) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('quizzes')
+          .update({
+            'is_open': open,
+          })
+          .eq('id', quizId)
+          .select()
+          .single();
+    } catch (e) {
+      print('Error opening/closing quiz: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to change quiz status. Please try again.')),
+      );
+    }
+  }
+
   Widget _buildQuizList() {
     if (_quizzes.isEmpty) {
       return Text(
         'No quizzes created yet.',
-        style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+        style: TextStyle(fontSize: 16, color: Colors.lime.shade700),
       );
     }
     return Column(
       children: _quizzes.map((quiz) {
+        bool quizOpen = _isQuizOpenInList.putIfAbsent(quiz['id'], () => quiz['is_open'] ?? false);
+        
         return Card(
           color: Colors.white,
           elevation: 8,
@@ -324,13 +335,44 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
               Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       '${(quiz['closes_at'] != null && quiz['closes_at'].trim() != '')?
                         'Due ${DateFormat.yMMMMd().add_jm().format(DateTime.parse(quiz['closes_at']).toLocal())}'
-                        :'No due date'}\n'
-                      'Status: ${quiz['is_open'] == true ? 'Open' : 'Closed'}',
+                        :'No due date'}',
                       style: TextStyle(color: Colors.black),
+                    ),
+                    Center(
+                      child: Row (
+                        children: [
+                          Icon(
+                            quizOpen ? Icons.lock_open : Icons.lock_outline,
+                            color: quizOpen ? Colors.lightGreenAccent.shade700 : Colors.redAccent,
+                            size: 24,
+                          ),
+                          // Is open switch
+                          SizedBox(
+                            width: 200,
+                            child: SwitchListTile.adaptive(
+                              title: Text(
+                                quizOpen?'Open':'Closed',
+                                style: TextStyle(
+                                  color: quizOpen ? Colors.lightGreenAccent.shade700 : Colors.redAccent,
+                                ),
+                              ),
+                              value: _isQuizOpenInList[quiz['id']] ?? false,
+                              onChanged: (val) {
+                                setState(() {
+                                  _isQuizOpenInList[quiz['id']] = val;
+                                  _updateQuizStatus(quiz['id'], val);
+                                });
+                              },
+                              activeColor: Colors.lightGreenAccent.shade700,
+                            ),
+                          ),
+                        ]
+                      ),
                     ),
                     SizedBox(height: 12),
                     TextButton.icon(
@@ -392,7 +434,7 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
   }
 
   // --- UI Widget for questions inside the quiz creation form ---
-  Widget _buildQuestionForm(int index) {
+  Widget _buildQuestionForm(int index, BuildContext context, void Function(void Function()) setLocalState) {
     final question = _newQuestions[index];
     return Card(
       margin: EdgeInsets.symmetric(vertical: 6),
@@ -412,7 +454,12 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
                 ),
                 Spacer(),
                 IconButton(
-                  onPressed: () => _removeNewQuestion(index),
+                  onPressed: () {
+                    setLocalState(() {
+                      if (index >= 0 && index < _newQuestions.length)
+                        _newQuestions.removeAt(index);
+                    });
+                  },
                   icon: Icon(Icons.delete, color: Colors.redAccent),
                   tooltip: 'Remove this question',
                   splashRadius: 22,
@@ -461,92 +508,168 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
               color: Colors.lightGreen.shade800,
             ),
           ),
-          content: Column(
-            children: [
-              Card(
-                elevation: 8,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // Quiz title
-                      TextField(
-                        controller: _quizTitleController,
-                        decoration: InputDecoration(
-                          labelText: 'Quiz Title',
-                          border:
-                              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: Icon(Icons.title, color: Colors.lime.shade700),
-                        ),
-                      ),
-                      SizedBox(height: 14),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                Card(
+                  elevation: 8,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SizedBox(
+                      width: 600,
+                      child: Column(
+                        children: [
+                          // Quiz title
+                          TextField(
+                            controller: _quizTitleController,
+                            decoration: InputDecoration(
+                              labelText: 'Quiz Title',
+                              border:
+                                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: Icon(Icons.title, color: Colors.lime.shade700),
+                            ),
+                          ),
+                          SizedBox(height: 14),
 
-                      // Quiz description
-                      TextField(
-                        controller: _quizDescController,
-                        decoration: InputDecoration(
-                          labelText: 'Quiz Description (optional)',
-                          border:
-                              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: Icon(Icons.description, color: Colors.lime.shade700),
-                        ),
-                        maxLines: 2,
-                      ),
-                      SizedBox(height: 14),
+                          // Quiz description
+                          TextField(
+                            controller: _quizDescController,
+                            decoration: InputDecoration(
+                              labelText: 'Quiz Description (optional)',
+                              border:
+                                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: Icon(Icons.description, color: Colors.lime.shade700),
+                            ),
+                            maxLines: 2,
+                          ),
+                          SizedBox(height: 14),
 
-                      // Close datetime
-                      TextField(
-                        controller: _quizCloseController,
-                        decoration: InputDecoration(
-                          labelText: 'Due Date (optional)',
-                          border:
-                              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: Icon(Icons.timer_off, color: Colors.orange.shade700),
-                          hintText: 'YYYY-MM-DDTHH:mm:ss',
-                        ),
-                      ),
-                      SizedBox(height: 14),
+                          // Close datetime -> SWITCH TO CALENDAR INPUT
+                          TextField(
+                            controller: _quizCloseController,
+                            decoration: InputDecoration(
+                              labelText: 'Due Date (optional)',
+                              border:
+                                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: Icon(Icons.timer_off, color: Colors.orange.shade700),
+                              hintText: 'YYYY-MM-DDTHH:mm:ss',
+                            ),
+                          ),
+                          SizedBox(height: 14),
 
-                      // Is open switch
-                      SwitchListTile.adaptive(
-                        title: Text('Is Quiz Open?'),
-                        value: _isQuizOpen,
-                        onChanged: (val) {
-                          setState(() {
-                            _isQuizOpen = val;
-                          });
-                        },
-                        activeColor: Colors.lime.shade600,
+                          StatefulBuilder(
+                            builder: (BuildContext context, void Function(void Function()) setLocalState) {
+                              return Row (
+                                children: [
+                                  Icon(
+                                    _isQuizOpen ? Icons.lock_open : Icons.lock_outline,
+                                    color: _isQuizOpen ? Colors.lightGreenAccent.shade700 : Colors.redAccent,
+                                    size: 24,
+                                  ),
+                                  // Is open switch
+                                  SizedBox(
+                                    width: 200,
+                                    child: SwitchListTile.adaptive(
+                                      title: Text(
+                                        _isQuizOpen?'Open':'Closed',
+                                        style: TextStyle(
+                                          color: _isQuizOpen ? Colors.lightGreenAccent.shade700 : Colors.redAccent,
+                                        ),
+                                      ),
+                                      value: _isQuizOpen,
+                                      onChanged: (val) {
+                                        setLocalState(() {
+                                          _isQuizOpen = val;
+                                        });
+                                      },
+                                      activeColor: Colors.lightGreenAccent.shade700,
+                                    ),
+                                  ),
+                                ]
+                              );
+                            }
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 24),
-              Card(
-                elevation: 8,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
+                SizedBox(height: 16),
+                StatefulBuilder(
+                  builder: (BuildContext context, void Function(void Function()) setLocalState) {
+                    return Card(
+                      elevation: 8,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            if (_newQuestions.isEmpty)
+                              Text(
+                                'Add at least one question to this quiz.',
+                                style: TextStyle(color: Colors.lime.shade700, fontSize: 14),
+                              ),
 
-                    ],
-                  ),
+                            ..._newQuestions
+                                .asMap()
+                                .entries
+                                .map((entry) => _buildQuestionForm(entry.key, context, setLocalState))
+                                .toList(),
+
+                            SizedBox(height: 16),
+
+                            // Add question button
+                            Center(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  setLocalState(() {
+                                    _newQuestions.add(_QuizQuestion());
+                                    print(_newQuestions);
+                                  });
+                                },
+                                icon: Icon(Icons.add_circle_outline, color: Colors.lime.shade900),
+                                label: Text('Add Question', style: TextStyle(color: Colors.lime.shade900, fontSize: 16, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 26, vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
+                                  backgroundColor: Colors.lime,
+                                  elevation: 8,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
               child: Text('Cancel', style: TextStyle(color: Colors.lightGreen.shade700)),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            ElevatedButton(
-              child: Text('Create', style: TextStyle(color: Colors.lightGreen.shade900)),
               onPressed: () {
-               //_createNewClass();
-               Navigator.of(context).pop();
+                _clearQuizForm();
+                Navigator.of(context).pop();
               },
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                if (!_isCreatingQuiz) {
+                  _submitQuizWithQuestions();
+                  Navigator.of(context).pop();
+                }
+              },
+              icon: _isCreatingQuiz
+                ? SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Icon(Icons.save_outlined, color: Colors.lightGreen.shade900),
+              label: Text(_isCreatingQuiz ? 'Saving...' : 'Create Quiz', style: TextStyle(color: Colors.lightGreen.shade900)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.lightGreen,
               ),
@@ -556,68 +679,6 @@ class _TeacherClassPageState extends State<TeacherClassPage> {
       }
     );
   }
-
-  /*Widget _buildCreateQuizAndQuestionsSection() {
-
-            Divider(height: 30, thickness: 1.2),
-
-            // Questions list (dynamic)
-            if (_newQuestions.isEmpty)
-              Text(
-                'Add at least one question to this quiz.',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-              ),
-
-            ..._newQuestions
-                .asMap()
-                .entries
-                .map((entry) => _buildQuestionForm(entry.key))
-                .toList(),
-
-            SizedBox(height: 8),
-
-            // Add question button
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: _addNewQuestion,
-                icon: Icon(Icons.add_circle_outline),
-                label: Text('Add Question'),
-                style: ElevatedButton.styleFrom(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 26, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  backgroundColor: Colors.lime.shade700,
-                ),
-              ),
-            ),
-
-            SizedBox(height: 22),
-
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: _isCreatingQuiz ? null : _submitQuizWithQuestions,
-                icon: _isCreatingQuiz
-                    ? SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Icon(Icons.save_outlined),
-                label: Text(_isCreatingQuiz ? 'Saving...' : 'Create Quiz'),
-                style: ElevatedButton.styleFrom(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }*/
 
   @override
   void dispose() {

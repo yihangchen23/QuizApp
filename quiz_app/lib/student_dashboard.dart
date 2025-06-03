@@ -112,9 +112,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       await Supabase.instance.client.from('enrollments').insert([
         {'student_id': widget.studentId, 'class_id': classId}
       ]);
+      await _fetchClasses(context);
       setState() {
         _enrollClassIdController.clear();
-        _fetchClasses(context);
       }
     } catch (e) {
       setState(() {

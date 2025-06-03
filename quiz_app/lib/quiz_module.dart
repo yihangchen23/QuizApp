@@ -155,12 +155,12 @@ class _QuizModulePageState extends State<QuizModulePage> {
             'flagged': false,
           };
         }
-        return {'feedback': 'AI returned faulty formatting: $content', 'score': 0, 'flagged': true};
+        return {'feedback': 'ERROR | AI returned faulty formatting: $content', 'score': 0, 'flagged': true};
       } else {
-        return {'feedback': 'AI grading failed.', 'score': 0, 'flagged': true};
+        return {'feedback': 'ERROR | AI grading failed.', 'score': 0, 'flagged': true};
       }
     } catch (e) {
-      return {'feedback': 'AI error: $e', 'score': 0, 'flagged': true};
+      return {'feedback': 'ERROR | AI error: $e', 'score': 0, 'flagged': true};
     }
   }
 

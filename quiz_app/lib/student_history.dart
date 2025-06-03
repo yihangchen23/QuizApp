@@ -286,7 +286,15 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: _fetchStudentHistory,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
