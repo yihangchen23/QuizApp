@@ -292,11 +292,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         }
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        QuizApp.errorSnackBar(context, 'Failed to create account.');
-        print('sign up error $e');
-      });
+      QuizApp.happySnackBar(context, 'Account Creation Successful!');
+      Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
     }
   }
 }

@@ -214,74 +214,69 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                       'Teacher Dashboard',
                       style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 32),
-
-                    // Class List Section
-                    
+                    SizedBox(height: 32),                    
                     Container(
                       constraints: BoxConstraints(maxWidth: 600), // Constrained width
                       child: Card(
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Stack(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(
-                              children: [
-                                Text(
-                                  'Your Classes',
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
-                                ),
-                                SizedBox(height: 20),
-                                if (_isLoading)
-                                  Center(child: CircularProgressIndicator())
-                                else if (_errorMessage.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8.0),
-                                    child: Text(
-                                      _errorMessage,
-                                      style: TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Your Classes',
+                                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.lime.shade900),
                                   ),
-                                // Display the list of classes
-                                if (_classes.isNotEmpty)
-                                  ListView.builder(
-                                    shrinkWrap: true, // Allow ListView to shrink to fit its children
-                                    itemCount: _classes.length,
-                                    itemBuilder: (context, index) {
-                                      final classItem = _classes[index];
-                                      return GestureDetector(
-                                        onTap: () => _goToClassPage(classItem['id'], widget.teacherId),
-                                        child: Card(
-                                          margin: EdgeInsets.symmetric(vertical: 8),
-                                          color: Colors.white,
-                                          elevation: 8,
-                                          child: ListTile(
-                                            contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                                            title: Text(
-                                              classItem['name'],
-                                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.lightGreen.shade800),
-                                            ),
-                                            trailing: Icon(Icons.arrow_forward, color: Colors.lightGreen.shade800),
-                                          ),
-                                        ),
-                                      );
-                                    },
+                                  IconButton(
+                                    icon: Icon(Icons.add),
+                                    onPressed: () => _classCreationDialog(context),
+                                    tooltip: 'Create a new class',
                                   ),
                                 ],
                               ),
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: IconButton(
-                                  icon: Icon(Icons.add),
-                                  onPressed: () => _classCreationDialog(context),
-                                  tooltip: 'Create a new class',
+                              SizedBox(height: 20),
+                              if (_isLoading)
+                                Center(child: CircularProgressIndicator())
+                              else if (_errorMessage.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: Text(
+                                    _errorMessage,
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              // Display the list of classes
+                              if (_classes.isNotEmpty)
+                                ListView.builder(
+                                  shrinkWrap: true, // Allow ListView to shrink to fit its children
+                                  itemCount: _classes.length,
+                                  itemBuilder: (context, index) {
+                                    final classItem = _classes[index];
+                                    return GestureDetector(
+                                      onTap: () => _goToClassPage(classItem['id'], widget.teacherId),
+                                      child: Card(
+                                        margin: EdgeInsets.symmetric(vertical: 8),
+                                        color: Colors.white,
+                                        elevation: 8,
+                                        child: ListTile(
+                                          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                                          title: Text(
+                                            classItem['name'],
+                                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.lightGreen.shade800),
+                                          ),
+                                          trailing: Icon(Icons.arrow_forward, color: Colors.lightGreen.shade800),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                             ],
                           ),
                         ),

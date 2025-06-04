@@ -74,4 +74,19 @@ class QuizApp extends StatelessWidget {
       ),
     );
   }
+  static void happySnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error, color: Colors.white),
+            SizedBox(width: 16),
+            Text(message, style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
 }
