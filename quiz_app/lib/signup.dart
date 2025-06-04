@@ -85,7 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             TextField(
                               controller: _emailController,
                               decoration: InputDecoration(
-                                labelText: 'Username',
+                                labelText: 'Email',
                                 labelStyle: TextStyle(
                                   color: Colors.lightGreen,
                                   fontWeight: FontWeight.w500,

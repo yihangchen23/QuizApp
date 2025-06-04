@@ -23,12 +23,12 @@ KwikGrade is an AI-powered quiz platform for teachers and students. Teachers can
 
 - Launch the app.
 - Click **Sign Up**.
-- Fill in your full name, username, password, and select your role (Student or Teacher).
+- Fill in your full name, email, password, and select your role (Student or Teacher).
 - Click **Sign Up** to create your account.
 
 ### 3. Logging In
 
-- Enter your username and password on the login screen.
+- Enter your email and password on the login screen.
 - Click **Log In**.
 
 ### 4. For Teachers
@@ -50,7 +50,7 @@ KwikGrade is an AI-powered quiz platform for teachers and students. Teachers can
 
 ## Support
 
-For help or feedback, please contact the app administrator or open an issue on the project repository.
+For help or feedback, please contact either Aliasgar Mullamithawala (Github:Pikaku1) or Yihang Chen (Github:YihangChen23)
 
 ---
 
